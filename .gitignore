@@ -1,0 +1,4 @@
+/node_modules
+/config
+/migrations
+knexfile.js
