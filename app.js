@@ -36,17 +36,27 @@ app.use( (req, res, next) => {
   next();
 });
 
+//TODO: Protect the routes and make the login logic
 const Router = express.Router();
 app.use( '/', Router );
-
-const SessionRoutes = require( './Routes/Session' );
-Router.use( '/sessions', SessionRoutes );
 
 const CompanyRoutes = require( './Routes/Company' );
 Router.use( '/companies', CompanyRoutes );
 
 const UserRoutes = require( './Routes/User' );
 Router.use( '/users', UserRoutes );
+
+const RoleRoutes = require( './Routes/Role' );
+Router.use( '/roles', RoleRoutes );
+
+const SessionRoutes = require( './Routes/Session' );
+Router.use( '/sessions', SessionRoutes );
+
+const TypeRoutes = require( './Routes/Type' );
+Router.use( '/types', TypeRoutes );
+
+const CodeRoutes = require( './Routes/Code' );
+Router.use( '/codes', CodeRoutes );
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -61,10 +71,8 @@ app.use(function(err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
   res.status(err.status || 500);
-  //res.render('error');
-  res.send( 'bad request' );
+  res.send( err.message );
 });
 
 module.exports = app;
