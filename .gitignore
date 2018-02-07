@@ -1,4 +1,5 @@
 /node_modules
 /config
 /migrations
+/seeds
 knexfile.js
