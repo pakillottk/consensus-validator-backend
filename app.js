@@ -42,7 +42,6 @@ app.get( '/me', app.oauth.authenticate(), (req, res) => {
   res.send( req.res.locals.oauth.token.user );
 });
 
-//TODO: Protect the routes
 const Router = express.Router();
 app.use( '/', app.oauth.authenticate(), Router );
 

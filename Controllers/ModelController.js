@@ -15,18 +15,33 @@ class ModelController extends Controller {
         return this.model.query().findById( id );
     }
 
-    create( data ) {
-        return this.model.query().insert( data );
+    async create( data ) {
+        try {
+            const created = await this.model.query().insert( data );
+            return created;
+        } catch( error ) {
+            throw { code: error.code, message: error.detail };
+        }
     }
 
     //Updated the instance by Id
-    update( id, data ) {
-        return this.model.query().patchAndFetchById( id, data );
+    async update( id, data ) {
+        try {
+            const updated = await this.model.query().patchAndFetchById( id, data );
+            return updated;
+        } catch( error ) {
+            throw { code: error.code, message: error.detail };
+        }
     }
 
     //Deletes the instance by Id
-    delete( id ) {
-        return this.model.query().deleteById( id );
+    async delete( id ) {
+        try {
+            const deleted = await this.model.query().deleteById( id );
+            return deleted;
+        } catch( error ) {
+            throw { code: error.code, message: error.detail };
+        }
     }
 }
 
