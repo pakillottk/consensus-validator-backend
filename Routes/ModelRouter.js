@@ -1,9 +1,9 @@
-module.exports = ( model ) => {
+module.exports = ( model, including ) => {
     const Router = require( 'express' ).Router();
     const controller = require( '../Controllers/ModelController' )( model );
     
     Router.get( '/', async ( req, res ) => {
-        const data = await controller.index();
+        const data = await controller.index( including );
         res.send( data );
     });
 

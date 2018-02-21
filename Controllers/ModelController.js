@@ -7,11 +7,16 @@ class ModelController extends Controller {
         this.model = model;
     }
 
-    index() {
-        return this.model.query();    
+    index( including ) {
+        const ouput = this.model.query();
+        if( including ) {
+            return ouput.eager( including );
+        }    
+
+        return output;
     }
 
-    get( id ) {
+    get( id, including ) {
         return this.model.query().findById( id );
     }
 
