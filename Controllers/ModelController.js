@@ -8,9 +8,9 @@ class ModelController extends Controller {
     }
 
     index( including ) {
-        const ouput = this.model.query();
+        const output = this.model.query();
         if( including ) {
-            return ouput.eager( including );
+            return output.eager( including );
         }    
 
         return output;
