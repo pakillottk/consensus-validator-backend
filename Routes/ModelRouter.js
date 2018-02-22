@@ -23,7 +23,7 @@ module.exports = ( model, including ) => {
 
     Router.put( '/:id', async ( req, res ) => {
         try {
-            const data = await controller.update( req.params.id, req.body );
+            const data = await controller.update( req.params.id, req.body, including );
             res.send( data );
         } catch( error ) {
             res.status( 400 ).send( error );

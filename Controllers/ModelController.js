@@ -22,7 +22,7 @@ class ModelController extends Controller {
 
     async create( data ) {
         try {
-            const created = await this.model.query().insert( data );
+            const created = await this.model.query().insert( {...data, created_at: new Date(), updated_at: new Date()} );
             return created;
         } catch( error ) {
             throw { code: error.code, message: error.detail };
@@ -30,10 +30,9 @@ class ModelController extends Controller {
     }
 
     //Updated the instance by Id
-    async update( id, data ) {
+    async update( id, data, including ) {
         try {
-            const updated = await this.model.query().patchAndFetchById( id, data );
-            return updated;
+            return await this.model.query().eager( including ).patchAndFetchById( id, {...data, updated_at: new Date()} );
         } catch( error ) {
             throw { code: error.code, message: error.detail };
         }
