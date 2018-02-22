@@ -20,9 +20,9 @@ class ModelController extends Controller {
         return this.model.query().findById( id );
     }
 
-    async create( data ) {
+    async create( data, including ) {
         try {
-            const created = await this.model.query().insert( {...data, created_at: new Date(), updated_at: new Date()} );
+            const created = await this.model.query().eager( including ).insert( {...data, created_at: new Date(), updated_at: new Date()} );
             return created;
         } catch( error ) {
             throw { code: error.code, message: error.detail };
@@ -42,7 +42,7 @@ class ModelController extends Controller {
     async delete( id ) {
         try {
             const deleted = await this.model.query().deleteById( id );
-            return deleted;
+            return { deleted_at: new Date(), deleted_id: id };
         } catch( error ) {
             throw { code: error.code, message: error.detail };
         }
