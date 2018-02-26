@@ -1,9 +1,12 @@
-module.exports = ( model, including ) => {
+const DBQuery = require( '../Database/Queries/DBQuery' );
+
+module.exports = ( model, including, queryBuilder ) => {
     const Router = require( 'express' ).Router();
     const controller = require( '../Controllers/ModelController' )( model );
-    
+    queryBuilder = queryBuilder || ( ( req ) => new DBQuery( req ) );
+
     Router.get( '/', async ( req, res ) => {
-        const data = await controller.index( including );
+        const data = await controller.index( including, queryBuilder( req ) );
         res.send( data );
     });
 
@@ -14,7 +17,8 @@ module.exports = ( model, including ) => {
 
     Router.post( '/' , async ( req, res ) => {
         try {
-            const data = await controller.create( req.body, including );
+            const user = req.res.locals.oauth.token.user;
+            const data = await controller.create( user.company_id ? {...req.body, company_id: user.company_id } : req.body, including );
             res.send( data );
         } catch( error ) {
             res.status( 400 ).send( error );

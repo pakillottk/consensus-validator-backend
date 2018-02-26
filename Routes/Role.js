@@ -1,2 +1,2 @@
 const RoleModel = require( '../Database/Role' );
-module.exports = require( './ModelRouter' )( RoleModel );
+module.exports = require( './ModelRouter' )( RoleModel, '', ( req ) => null );

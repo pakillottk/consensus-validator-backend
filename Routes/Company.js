@@ -1,2 +1,2 @@
 const CompanyModel = require( '../Database/Company' );
-module.exports = require( './ModelRouter' )( CompanyModel );
+module.exports = require( './ModelRouter' )( CompanyModel, '' );

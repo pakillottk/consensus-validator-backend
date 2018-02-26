@@ -7,13 +7,32 @@ class ModelController extends Controller {
         this.model = model;
     }
 
-    index( including ) {
-        const output = this.model.query();
+    applyDBQuery( query, DBQuery ) {
+        if( DBQuery ) {
+            for( let i = 0; i < DBQuery.clauses.length; i++ ) {
+                const clause = DBQuery.clauses[ i ];
+                if( i === 0 ) {
+                    query = query.where( clause.field, clause.operator, clause.value );
+                } else {
+                    if( clause.linker === 'and' ) {
+                        query = query.andWhere( clause.field, clause.operator, clause.value );
+                    } else {
+                        query = query.orWhere( clause.field, clause.operator, clause.value );
+                    }
+                }
+            }
+        }
+
+        return query;
+    }
+
+    index( including, DBQuery ) {
+        let output = this.model.querwy();
         if( including ) {
-            return output.eager( including );
+            output = output.eager( including );
         }    
 
-        return output;
+        return this.applyDBQuery( output, DBQuery );
     }
 
     get( id, including ) {
