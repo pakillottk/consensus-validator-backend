@@ -27,7 +27,7 @@ class ModelController extends Controller {
     }
 
     index( including, DBQuery ) {
-        let output = this.model.querwy();
+        let output = this.model.query();
         if( including ) {
             output = output.eager( including );
         }    

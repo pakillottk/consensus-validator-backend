@@ -71,3 +71,12 @@ module.exports.saveToken = async ( token, client, user ) => {
 
     return false;
 }
+
+module.exports.logout = async ( token ) => {
+    try {
+        await OAuthToken.query().delete().where( 'access_token', token.accessToken );
+        return true;
+    } catch( error ) {
+        return false;
+    }
+}

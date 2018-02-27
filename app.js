@@ -41,6 +41,14 @@ app.post( '/login', app.oauth.token() );
 app.get( '/me', app.oauth.authenticate(), (req, res) => {
   res.send( req.res.locals.oauth.token.user );
 });
+app.post( '/logout', app.oauth.authenticate(), async ( req, res ) => {
+  const logout = await OAuthModel.logout( req.res.locals.oauth.token );
+  if( logout ) {
+    res.status(200).send( 'logged out!' );
+  } else {
+    res.status( 400 ).send( 'logout failed' );
+  }
+})
 
 const Router = express.Router();
 app.use( '/', app.oauth.authenticate(), Router );
