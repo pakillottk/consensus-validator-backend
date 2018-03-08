@@ -1,15 +1,32 @@
+const QueryConfig = require( './QueryConfig' );
+
 class DBQuery {
     constructor( req ) {
         this.clauses = [];
         const user = req.res.locals.oauth.token.user;
-        if( user.role.role !== 'superadmin' ) {
-            console.log( req.originalUrl );
-            if( req.originalUrl.includes( 'companies' ) ) {
-                this.addClause( 'id', '=', user.company_id );
-            } else {
-                this.addClause( 'company_id', '=', user.company_id );
+        
+        this.applyUserGuards( user, req, QueryConfig.userGuards );
+    }
+
+    checkEntitiesInUrl( url, entities ) {
+        for( let i = 0; i < entities.length; i++ ) {
+            if( url.includes( entities[ i ] ) ) {
+                return true;
             }
         }
+
+        return false;
+    }
+
+    applyUserGuards( user, req, guards ) {
+        const role = user.role.role;
+        guards.forEach( guard => {
+            if( !guard.role_exceptions[ role ] ) {
+                if( this.checkEntitiesInUrl( req.originalUrl, guard.entities ) ) {
+                    this.addClause( guard.field, guard.operator, user[ guard.user_field ] )
+                }
+            }
+        });
     }
 
     addClause( field, operator, value, linker = 'and' ) {
