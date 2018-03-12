@@ -4,6 +4,7 @@ module.exports = ( model, including, queryBuilder ) => {
     const Router = require( 'express' ).Router();
     const controller = require( '../Controllers/ModelController' )( model );
     queryBuilder = queryBuilder || ( async ( req ) => new DBQuery( req ) );
+    including = including || '';
 
     Router.get( '/', async ( req, res ) => {
         const data = await controller.index( including, await queryBuilder( req ) );
