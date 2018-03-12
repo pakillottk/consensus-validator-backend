@@ -11,13 +11,17 @@ class ModelController extends Controller {
         if( DBQuery ) {
             for( let i = 0; i < DBQuery.clauses.length; i++ ) {
                 const clause = DBQuery.clauses[ i ];
-                if( i === 0 ) {
-                    query = query.where( clause.field, clause.operator, clause.value );
+                if( clause.operator === 'in' ) {
+                    query = query.whereIn( clause.field, clause.value );
                 } else {
-                    if( clause.linker === 'and' ) {
-                        query = query.andWhere( clause.field, clause.operator, clause.value );
+                    if( i === 0 ) {
+                        query = query.where( clause.field, clause.operator, clause.value );
                     } else {
-                        query = query.orWhere( clause.field, clause.operator, clause.value );
+                        if( clause.linker === 'and' ) {
+                            query = query.andWhere( clause.field, clause.operator, clause.value );
+                        } else {
+                            query = query.orWhere( clause.field, clause.operator, clause.value );
+                        }
                     }
                 }
             }
@@ -26,7 +30,7 @@ class ModelController extends Controller {
         return query;
     }
 
-    index( including, DBQuery ) {
+    index( including, DBQuery ) {       
         let output = this.model.query();
         if( including ) {
             output = output.eager( including );
@@ -35,8 +39,13 @@ class ModelController extends Controller {
         return this.applyDBQuery( output, DBQuery );
     }
 
-    get( id, including ) {
-        return this.model.query().findById( id );
+    get( id, including, DBQuery ) {
+        let output = this.model.query().findById( id );
+        if( DBQuery ) {
+            return this.applyDBQuery( output, DBQuery );
+        }
+
+        return output;
     }
 
     async create( data, including ) {

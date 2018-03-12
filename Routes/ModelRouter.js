@@ -3,15 +3,15 @@ const DBQuery = require( '../Database/Queries/DBQuery' );
 module.exports = ( model, including, queryBuilder ) => {
     const Router = require( 'express' ).Router();
     const controller = require( '../Controllers/ModelController' )( model );
-    queryBuilder = queryBuilder || ( ( req ) => new DBQuery( req ) );
+    queryBuilder = queryBuilder || ( async ( req ) => new DBQuery( req ) );
 
     Router.get( '/', async ( req, res ) => {
-        const data = await controller.index( including, queryBuilder( req ) );
+        const data = await controller.index( including, await queryBuilder( req ) );
         res.send( data );
     });
 
     Router.get( '/:id', async ( req, res ) => {
-        const data = await controller.get( req.params.id );
+        const data = await controller.get( req.params.id, '', await queryBuilder( req ) );
         res.send( data );
     });
 

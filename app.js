@@ -71,6 +71,12 @@ Router.use( '/types', TypeRoutes );
 const CodeRoutes = require( './Routes/Code' );
 Router.use( '/codes', CodeRoutes );
 
+const DeliverRoutes = require( './Routes/Deliver' );
+Router.use( '/deliveries', DeliverRoutes );
+
+const ScanGroupRoutes = require( './Routes/ScanGroups' );
+Router.use( '/scangroups', ScanGroupRoutes );
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');
