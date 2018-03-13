@@ -1,6 +1,7 @@
 const DBQuery = require( '../Database/Queries/DBQuery' );
 const DeliverModel = require( '../Database/Deliver' );
 const Type = require( '../Database/Type' );
+const DeliverController = require( '../Controllers/DeliverController' );
 
 module.exports = require( './ModelRouter' )( DeliverModel, '[user, type]', async ( req ) => {
     const sessionId = req.query.session;
@@ -18,4 +19,4 @@ module.exports = require( './ModelRouter' )( DeliverModel, '[user, type]', async
     dbQuery.addClause( 'type_id', 'in', typesArray );
 
     return dbQuery;
-});
+}, DeliverController);
