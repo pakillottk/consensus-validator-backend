@@ -1,5 +1,7 @@
 const Type = require( '../Database/Type' );
+const DBQuery = require( '../Database/Queries/DBQuery');
 const CodeModel = require( '../Database/Code' );
+const CodeController = require( '../Controllers/CodeController' )
 
 module.exports = require( './ModelRouter' )( CodeModel, '[type]', async ( req ) => {
     const sessionId = req.query.session;
@@ -16,4 +18,4 @@ module.exports = require( './ModelRouter' )( CodeModel, '[type]', async ( req ) 
     dbQuery.addClause( 'type_id', 'in', typesArray );
 
     return dbQuery;
-});
+}, CodeController);

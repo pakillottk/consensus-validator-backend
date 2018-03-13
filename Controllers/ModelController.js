@@ -1,3 +1,4 @@
+const Model =  require('objection').Model;
 const Controller = require( './Controller' );
 
 class ModelController extends Controller {
@@ -48,12 +49,11 @@ class ModelController extends Controller {
         return output;
     }
 
-    async create( data, including ) {
+    async create( data, including, query ) {
         try {
             const created = await this.model.query().eager( including ).insert( {...data, created_at: new Date(), updated_at: new Date()} );
             return created;
         } catch( error ) {
-            console.log( error );
             throw { code: error.code, message: error.detail };
         }
     }
@@ -78,4 +78,7 @@ class ModelController extends Controller {
     }
 }
 
-module.exports = (model) => new ModelController( model );
+module.exports = {
+    builder: (model) => new ModelController( model ),
+    class: ModelController
+}

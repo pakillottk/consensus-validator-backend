@@ -1,8 +1,9 @@
 const DBQuery = require( '../Database/Queries/DBQuery' );
+const ModelController = require( '../Controllers/ModelController' ).builder
 
-module.exports = ( model, including, queryBuilder ) => {
+module.exports = ( model, including, queryBuilder, CustomController ) => {
     const Router = require( 'express' ).Router();
-    const controller = require( '../Controllers/ModelController' )( model );
+    const controller = CustomController ? CustomController(model) : ModelController( model );
     queryBuilder = queryBuilder || ( async ( req ) => new DBQuery( req ) );
     including = including || '';
 
@@ -19,7 +20,7 @@ module.exports = ( model, including, queryBuilder ) => {
     Router.post( '/' , async ( req, res ) => {
         try {
             const user = req.res.locals.oauth.token.user;
-            const data = await controller.create( user.company_id ? {...req.body, company_id: user.company_id } : req.body, including );
+            const data = await controller.create( user.company_id ? {...req.body, company_id: user.company_id } : req.body, including, req.query );
             res.send( data );
         } catch( error ) {
             res.status( 400 ).send( error );
