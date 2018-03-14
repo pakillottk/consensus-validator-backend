@@ -21,6 +21,16 @@ class CodeController extends ModelController {
                 type = typeAssigned[ 0 ]
             }
 
+            if( data.validations === undefined || data.validations === null || data.validations === "") {
+                data.validations = 0
+            }
+            if( data.maxValidations === undefined || data.maxValidations === null || data.maxValidations === "") {
+                data.maxValidations = 1
+            }
+            if( data.out === undefined || data.out === null || data.out.trim() === "") {
+                data.out = true
+            }
+
             const code = await this.model.query().eager( including ).insert({
                 ...data, 
                 type_id: type.id, 
@@ -29,6 +39,7 @@ class CodeController extends ModelController {
             });            
             return code;
         } catch( error ) {
+            console.log( error );
             throw { code: error.code, message: error.detail };
         }
     }
