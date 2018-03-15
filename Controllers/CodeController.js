@@ -39,7 +39,6 @@ class CodeController extends ModelController {
             });            
             return code;
         } catch( error ) {
-            console.log( error );
             throw { code: error.code, message: error.detail };
         }
     }

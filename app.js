@@ -74,6 +74,9 @@ Router.use( '/codes', CodeRoutes );
 const DeliverRoutes = require( './Routes/Deliver' );
 Router.use( '/deliveries', DeliverRoutes );
 
+const SaleRoutes = require( './Routes/Sale' );
+Router.use( '/sales', SaleRoutes );
+
 const ScanGroupRoutes = require( './Routes/ScanGroups' );
 Router.use( '/scangroups', ScanGroupRoutes );
 

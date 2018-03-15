@@ -26,6 +26,16 @@ const QueryConfig = {
             field: 'company_id',
             operator: '=',
             user_field: 'company_id'
+        },
+        {
+            role_exceptions: {
+                superadmin: true,
+                admin: true
+            },
+            entities: [ 'deliveries', 'sales' ],
+            field: 'user_id',
+            operator: '=',
+            user_field: 'id'
         }
     ]
 }
