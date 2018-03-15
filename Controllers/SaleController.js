@@ -9,16 +9,17 @@ class SaleController extends ModelController {
     constructor( model ) {
         super( model );
 
+        this.jobsResponses = {};
         this.queue = kue.createQueue();
         this.queue.process( 'sale', ( job, done ) => {
-            this.createSale( job.data, job.including, job.query, res, done );
+            this.createSale( job.id, job.data.data, job.data.including, job.data.query, done );
         });
     }
 
     async getAuthSales( type_id, user_id ) {
         let authSales       = await Deliver.query().sum('ammount')
-                            .where( 'type_id', '=', data.type_id )
-                            .andWhere( 'user_id', '=', data.user_id );
+                            .where( 'type_id', '=', type_id )
+                            .andWhere( 'user_id', '=', user_id );
         if( authSales.length === 0 ) {
             return 0;
         }
@@ -28,7 +29,7 @@ class SaleController extends ModelController {
     } 
 
     async getCodeIds( type_id ) {
-        const codesOfType = await Code.query().where( 'type_id', '=', data.type_id );
+        const codesOfType = await Code.query().where( 'type_id', '=', type_id );
         const codesIds = []
         codesOfType.forEach( code => {
             codesIds.push( code.id );
@@ -39,14 +40,19 @@ class SaleController extends ModelController {
 
     async getSoldTickets( codeIds, user_id ) {
         let soldByMe = await this.model.query().count()
-                                .where( 'code_id', 'in', codesIds )
-                                .andWhere( 'user_id', '=', data.user_id );
+                                .where( 'code_id', 'in', codeIds )
+                                .andWhere( 'user_id', '=', user_id );
         soldByMe = soldByMe[0].count;
 
         return soldByMe;
     }
 
-    async createSale( data, including, query, res, done ) {
+    async createSale( id, data, including, query, done ) {
+        const res = this.jobsResponses[ id ];
+        if( !res ) {
+            throw new Error( "There's no response object for this job: " + job );
+        }
+
         try {
             //Get tickets delivered to user
             const authSales = await this.getAuthSales( data.type_id, data.user_id );
@@ -89,17 +95,20 @@ class SaleController extends ModelController {
         } catch( error ) {
             res.status( 400 ).send( error );
             done( new Error( error ) );
-        }  
+        }
+
+        delete this.jobsResponses[ id ];
     }
 
     async create( data, including, query, res ) {
-        this.queue.create( 'sale', {data, including, query, res}).save(
+        const jobData =  { data, including: including, query: query };
+        const job = this.queue.create( 'sale', jobData ).save(
             ( error ) => {  
                 if( !error ){
+                    this.jobsResponses[ job.id ] = res;
                     return;
                 } 
-
-                throw { code: error.code, message: error.detail };
+                res.status( 400 ).send( error );
             }
         );
     }

@@ -14,7 +14,7 @@ class Sales extends Model {
                 modelClass: User,
                 join: {
                     from: 'Sales.user_id',
-                    to: 'User.id'
+                    to: 'Users.id'
                 }
             },
             code: {
