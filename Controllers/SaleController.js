@@ -65,8 +65,8 @@ class SaleController extends ModelController {
             const soldByMe = await this.getSoldTickets( codesIds, data.user_id );
             
             //If still under 
-            if( soldByMe < authSales ) {
-                const hashData = data.user_id + "" + data.user_id + "" + new Date().toString(); 
+            if( parseInt(soldByMe) < parseInt(authSales) ) {
+                const hashData = data.user_id + "" + data.type_id + "" + new Date().toString() + "" + new Date().getTime(); 
                 const hashCode = crypto.createHash('md5').update(hashData).digest("hex");
                 const newCode = await Code.query().insert({
                     code: hashCode,
@@ -108,6 +108,7 @@ class SaleController extends ModelController {
                     this.jobsResponses[ job.id ] = res;
                     return;
                 } 
+
                 res.status( 400 ).send( error );
             }
         );
