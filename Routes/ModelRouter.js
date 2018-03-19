@@ -1,7 +1,7 @@
 const DBQuery = require( '../Database/Queries/DBQuery' );
 const ModelController = require( '../Controllers/ModelController' ).builder
 
-module.exports = ( model, including, queryBuilder, CustomController, passUser, passRes ) => {
+module.exports = ( model, including, queryBuilder, CustomController, passUser, passRes, passCompany ) => {
     const Router = require( 'express' ).Router();
     const controller = CustomController ? CustomController(model) : ModelController( model );
     queryBuilder = queryBuilder || ( async ( req ) => new DBQuery( req ) );
@@ -24,9 +24,9 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
                 req.body.user_id = user.id;
             }
             if( passRes ) {
-                const data = await controller.create( user.company_id ? {...req.body, company_id: user.company_id } : req.body, including, req.query, res );
+                const data = await controller.create( passCompany ? {...req.body, company_id: user.company_id } : req.body, including, req.query, res );
             } else {
-                const data = await controller.create( user.company_id ? {...req.body, company_id: user.company_id } : req.body, including, req.query );
+                const data = await controller.create( passCompany ? {...req.body, company_id: user.company_id } : req.body, including, req.query );
                 res.send( data );
             }
         } catch( error ) {

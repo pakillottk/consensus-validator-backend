@@ -69,7 +69,7 @@ class SaleController extends ModelController {
                 const hashData = data.user_id + "" + data.type_id + "" + new Date().toString() + "" + new Date().getTime(); 
                 const hashCode = crypto.createHash('md5').update(hashData).digest("hex");
                 const newCode = await Code.query().insert({
-                    code: hashCode,
+                    code: 'CNS' + hashCode.substr(0, 9),
                     name: data.name,
                     type_id: data.type_id,
                     email: data.email,
@@ -112,6 +112,20 @@ class SaleController extends ModelController {
                 res.status( 400 ).send( error );
             }
         );
+    }
+
+    async delete( id ) {
+        try {
+            const toDelete = await this.model.query().findById( id );
+            const codeId = toDelete.code_id
+            //Delete the sale
+            const deleted = await this.model.query().deleteById( id );
+            //Delete the code
+            await Code.query().deleteById( codeId )
+            return { deleted_at: new Date(), deleted_id: id };
+        } catch( error ) {
+            throw { code: error.code, message: error.detail };
+        }
     }
 }
 

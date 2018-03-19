@@ -22,7 +22,7 @@ class DeliverController extends ModelController {
             totalAmmount = totalAmmountQuery[0].sum;
         }
 
-        return totalAmmount;
+        return totalAmmount || 0;
     }
 
     async create( data, including, query ) {

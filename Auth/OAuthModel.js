@@ -3,7 +3,7 @@ const OAuthClient = require( '../Database/OAuthClient' );
 const User = require( '../Database/User' );
 
 module.exports.getAccessToken = async ( bearerToken ) => {
-    const token = await OAuthToken.query().eager('[user, user.role]').findOne({ access_token: bearerToken });
+    const token = await OAuthToken.query().eager('[user, user.[role, company]]').findOne({ access_token: bearerToken });
     if( token ) {
         return {
             accessToken: token.access_token,
