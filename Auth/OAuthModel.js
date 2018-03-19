@@ -73,10 +73,14 @@ module.exports.saveToken = async ( token, client, user ) => {
 }
 
 module.exports.logout = async ( token ) => {
-    try {
+    try {       
         await OAuthToken.query().delete().where( 'access_token', token.accessToken );
         return true;
     } catch( error ) {
         return false;
     }
+}
+
+module.exports.clearOutdatedTokens = async () => {
+    return await OAuthToken.query().delete().where( 'access_token_expires_on', '<', new Date() );
 }

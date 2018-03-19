@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const OAuthServer = require( 'express-oauth-server' );
 const OAuthModel = require( './Auth/OAuthModel' );
+const ClearTokensJobs = require( './Auth/ClearTokensJobs' );
 
 const helmet = require( 'helmet' );
 const cors = require( 'cors' );
@@ -35,6 +36,8 @@ app.use( (req, res, next) => {
 
   next();
 });
+
+const tokensClearer = ClearTokensJobs(); 
 
 //LOGIN ROUTE
 app.post( '/login', app.oauth.token() );
