@@ -4,6 +4,7 @@ const Type = require( '../Database/Type' );
 const Code = require( '../Database/Code' );
 const kue = require( 'kue' );
 const crypto = require( 'crypto' );
+const { transaction } = require( 'objection' );
 
 class SaleController extends ModelController {
     constructor( model ) {
@@ -115,15 +116,20 @@ class SaleController extends ModelController {
     }
 
     async delete( id ) {
+        let trx;
         try {
-            const toDelete = await this.model.query().findById( id );
+            trx = await transaction.start( this.model.knex() );
+
+            const toDelete = await this.model.query( trx ).findById( id );
             const codeId = toDelete.code_id
             //Delete the sale
-            const deleted = await this.model.query().deleteById( id );
+            const deleted = await this.model.query( trx ).deleteById( id );
             //Delete the code
-            await Code.query().deleteById( codeId )
+            await Code.query( trx ).deleteById( codeId )
             return { deleted_at: new Date(), deleted_id: id };
         } catch( error ) {
+            await trx.rollback();
+
             throw { code: error.code, message: error.detail };
         }
     }
