@@ -21,8 +21,8 @@ class ScanGroup extends Model {
                 relation: Model.HasManyRelation,
                 modelClass: ScanType,
                 join: {
-                    from:'ScanTypes.group_id',
-                    to: 'ScanGroups.id'
+                    from:'ScanGroups.id',
+                    to: 'ScanTypes.group_id'
                 }
             },
         };

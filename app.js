@@ -86,6 +86,9 @@ Router.use( '/scangroups', ScanGroupRoutes );
 const ScanTypesRoutes = require( './Routes/ScanTypes' );
 Router.use( '/scantypes', ScanTypesRoutes );
 
+const UserScanGroupRoutes = require( './Routes/UserScanGroup' );
+Router.use( '/userscangroups', UserScanGroupRoutes );
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');
