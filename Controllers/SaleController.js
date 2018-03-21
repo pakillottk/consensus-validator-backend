@@ -54,6 +54,7 @@ class SaleController extends ModelController {
             throw new Error( "There's no response object for this job: " + job );
         }
 
+        let trx;
         try {
             //Get tickets delivered to user
             const authSales = await this.getAuthSales( data.type_id, data.user_id );
@@ -67,9 +68,11 @@ class SaleController extends ModelController {
             
             //If still under 
             if( parseInt(soldByMe) < parseInt(authSales) ) {
+                trx = await transaction.start( this.model.knex() );
+
                 const hashData = data.user_id + "" + data.type_id + "" + new Date().toString() + "" + new Date().getTime(); 
                 const hashCode = crypto.createHash('md5').update(hashData).digest("hex");
-                const newCode = await Code.query().insert({
+                const newCode = await Code.query( trx ).insert({
                     code: 'CNS' + hashCode.substr(0, 9),
                     name: data.name,
                     type_id: data.type_id,
@@ -80,16 +83,21 @@ class SaleController extends ModelController {
                     created_at: new Date(),
                     updated_at: new Date()
                 });
-                const sale = await this.model.query().eager( including ).insert({
+                const sale = await this.model.query( trx ).eager( including ).insert({
                     user_id: data.user_id,
                     code_id: newCode.id,
                     created_at: new Date(),
                     updated_at: new Date()
                 });
 
+                await trx.commit();
+
                 res.send( sale );
                 done();
             } else {
+                if( trx ) {
+                    await trx.rollback();
+                }
                 res.status( 400 ).send({error:{message: "All sold"}});
                 done( new Error( "All sold!" ) );
             }  
@@ -120,12 +128,15 @@ class SaleController extends ModelController {
         try {
             trx = await transaction.start( this.model.knex() );
 
-            const toDelete = await this.model.query( trx ).findById( id );
+            const toDelete = await this.model.query().findById( id );
             const codeId = toDelete.code_id
             //Delete the sale
             const deleted = await this.model.query( trx ).deleteById( id );
             //Delete the code
             await Code.query( trx ).deleteById( codeId )
+
+            await trx.commit();
+
             return { deleted_at: new Date(), deleted_id: id };
         } catch( error ) {
             await trx.rollback();
