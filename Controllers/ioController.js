@@ -1,6 +1,16 @@
-const VotingController = require('../Consensus/VotingController');
-
 module.exports = ( io ) => {
+    const VotingController = require('../Consensus/VotingController')( 
+        ( room, votation ) => {
+            console.log( 'broadcast to: ' + room );
+            io.to( room ).emit( 'votation_opened', votation );
+        },         
+        ( room, consensus ) => {
+            console.log( 'emitting votation end to: ' + room );
+            console.log( consensus );
+            io.to( room ).emit( 'votation_closed', consensus );
+        }
+    );
+
     io.on( 'connect', ( socket ) => {
         socket.on( 'join', ( data ) => {
             socket.join( data.room );
@@ -22,5 +32,13 @@ module.exports = ( io ) => {
         socket.on( 'disconnect', () => {
             VotingController.removeSocket( socket.id );
         })
+
+        socket.on( 'open_votation', ( votation ) => {
+            VotingController.openVotation( votation );
+        });
+
+        socket.on( 'vote', ( veredict ) => {
+            VotingController.voteReceived( veredict );
+        });
     });    
 }
