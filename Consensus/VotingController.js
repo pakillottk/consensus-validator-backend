@@ -6,7 +6,7 @@ class VotingController {
     constructor( broadcastVotation, closeVotationHandler, waitTime ) {
         this.broadcastVotation = broadcastVotation;
         this.closeVotationHandler = closeVotationHandler;
-        this.waitTime = waitTime || 500;
+        this.waitTime = waitTime || 200;
         this.socketsRooms = {};
 
         this.votes = {};
@@ -24,12 +24,12 @@ class VotingController {
 
     registerSocket( room, socketId ) {
         this.socketsRooms[ socketId ] = room;
-        console.log( this.socketsRooms );
+        //console.log( this.socketsRooms );
     }
 
     removeSocket( socketId ) {
         delete this.socketsRooms[ socketId ];
-        console.log( this.socketsRooms );
+        //console.log( this.socketsRooms );
     }
 
     getVotationId( votation ) {
@@ -53,7 +53,7 @@ class VotingController {
 
     voteReceived( vote ) {
         console.log( 'vote received' );
-        console.log( vote.veredict );
+        //console.log( vote.veredict );
         if( !this.votes[ this.getVotationId( vote.votation ) ] ) {
             this.votes[ this.getVotationId( vote.votation ) ] = [ vote ];
         } else {
@@ -63,16 +63,19 @@ class VotingController {
 
     closeVotation( votation ) {
         const veredict = this.veredicts[ this.getVotationId( votation ) ];
+        const elapsed = parseInt(new Date().getTime()) - parseInt(new Date(votation.openedAt).getTime())
         console.log( 'votation ended' );
-        console.log( veredict );
+        console.log( elapsed );
+        //console.log( veredict );
         //If valid, updates the DB
         if( veredict.verification === 'valid' ) {
             CodeController.update( veredict.consensus.id, veredict.consensus );
         }
         this.closeVotationHandler( this.socketsRooms[ votation.openedBy ], {
             ...veredict,
-            closed_at: new Date()
-        });
+            closed_at: new Date(),
+            elapsed
+        });        
 
         delete this.votes[ this.getVotationId( votation ) ];
         delete this.veredicts[ this.getVotationId( votation ) ];
