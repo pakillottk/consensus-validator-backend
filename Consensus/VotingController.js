@@ -1,137 +1,73 @@
 const kue = require('kue');
 const CodeModel = require('../Database/Code');
 const CodeController = require('../Controllers/CodeController')(CodeModel);
+const VotingRoom = require('./VotingRoom');
 
+/*
+    Assign a voting room to a socket and
+    notify the votations data. 
+
+    VotingRooms will be created/removed based on the members attached.
+        - Creation: when someone join the room.
+        - Removal: when all members have left the room.
+*/
 class VotingController {
-    constructor( broadcastVotation, closeVotationHandler, waitTime ) {
+    constructor( broadcastVotation, closeVotationHandler ) {
+        //handles the openVotation message of all the voting nodes in a room
         this.broadcastVotation = broadcastVotation;
+        //handler the closeVotation message of a room's votation
         this.closeVotationHandler = closeVotationHandler;
-        this.waitTime = waitTime || 200;
+        
+        //key: socketId, value: a voting room
         this.socketsRooms = {};
-
-        this.votes = {};
-        this.veredicts = {};
-
-        this.votingQueue = kue.createQueue();
-        this.votingQueue.process( 'open_votation', ( job, done ) => {
-            this.broadcastVotation( job.data.room, job.data.votation );
-            done();
-        });
-        this.votingQueue.process( 'votation', ( job, done ) => {
-            this.runVotation( true, job.data, done );
-        });
+        //key: socket room name, value: a VotingRoom object
+        this.rooms = {};
     }
 
+    /*
+        Attach a VotingRoom to a socket
+    */
     registerSocket( room, socketId ) {
-        this.socketsRooms[ socketId ] = room;
-        //console.log( this.socketsRooms );
+        let roomObj;
+        if( this.rooms[ room ] ) {
+            roomObj = this.rooms[ room ];
+        } else {
+            roomObj = new VotingRoom( 
+                room, 
+                this.broadcastVotation, 
+                this.closeVotation.bind(this)
+            );
+            this.rooms[ room ] = roomObj;
+        }
+        this.socketsRooms[ socketId ] = roomObj;
+        roomObj.memberJoined();
     }
 
+    /*
+        Removes a socket from a VotingRoom
+    */
     removeSocket( socketId ) {
+        const room = this.socketsRooms[ socketId ]
         delete this.socketsRooms[ socketId ];
-        //console.log( this.socketsRooms );
+        if( room ) {
+            room.memberLeft();
+            if( room.members === 0 ) {
+                delete this.rooms[ room.room ];
+            }
+        }
     }
 
-    getVotationId( votation ) {
-        return votation.code+votation.openedBy+new Date(votation.openedAt).getTime();
-    }
-
-    openVotation( votation, broadcastVotation ) {
-        //Register the votation and start the voting process
-        this.votingQueue.create( 'open_votation', { votation, room: this.socketsRooms[ votation.openedBy ] } ).save( error => {
-            if( !error ) {
-                console.log( 'votation broadcast enqueued' );
-            }
-        });
-    
-        this.votingQueue.create( 'votation', votation ).save( ( error ) => {
-            if( !error ) {
-                console.log( 'votation created' );                
-            }
-        });
+    openVotation( votation ) {
+        this.socketsRooms[ votation.openedBy ].openVotation( votation );
     }
 
     voteReceived( vote ) {
-        console.log( 'vote received' );
-        //console.log( vote.veredict );
-        if( !this.votes[ this.getVotationId( vote.votation ) ] ) {
-            this.votes[ this.getVotationId( vote.votation ) ] = [ vote ];
-        } else {
-            this.votes[ this.getVotationId( vote.votation ) ].push( vote );
-        }
+        this.socketsRooms[ vote.votation.openedBy ].voteReceived( vote );
     }
 
-    closeVotation( votation ) {
-        const veredict = this.veredicts[ this.getVotationId( votation ) ];
-        const elapsed = parseInt(new Date().getTime()) - parseInt(new Date(votation.openedAt).getTime())
-        console.log( 'votation ended' );
-        console.log( elapsed );
-        //console.log( veredict );
-        //If valid, updates the DB
-        if( veredict.verification === 'valid' ) {
-            CodeController.update( veredict.consensus.id, veredict.consensus );
-        }
-        this.closeVotationHandler( this.socketsRooms[ votation.openedBy ], {
-            ...veredict,
-            closed_at: new Date(),
-            elapsed
-        });        
-
-        delete this.votes[ this.getVotationId( votation ) ];
-        delete this.veredicts[ this.getVotationId( votation ) ];
-    }
-
-    runVotation( firstRun, votation, done ) {
-        const votes = this.votes[ this.getVotationId( votation ) ];
-        
-        if( firstRun && !votes ) {
-            setTimeout( () => this.runVotation( false, votation, done ), this.waitTime );
-            return;
-        }
-
-        //All absent. Not valid.
-        if( !firstRun && !votes) {
-            this.veredicts[ this.getVotationId( votation ) ] = {
-                consensus: null,
-                verification: 'not_valid'
-            };
-            this.closeVotation( votation );
-            done();
-            return;
-        }
-
-        //End of votation
-        if( !firstRun && votes.length === 0 ) {
-            this.closeVotation( votation );
-            done();
-            return;
-        }
-
-        while( votes.length > 0 ) {
-            const vote = votes.shift();
-            const currentVeredict = this.veredicts[ this.getVotationId( votation ) ];
-
-            //First vote
-            if( !currentVeredict ) {
-                const veredict =  {
-                    consensus: vote.veredict.proposal, 
-                    verification: vote.veredict.verification,
-                    message: vote.veredict.message
-                };
-                this.veredicts[ this.getVotationId( votation ) ] = veredict;
-            } else {
-                //No CONSENSUS. Not valid
-                if( currentVeredict.verification === 'not_valid' ) {
-                    currentVeredict.message = vote.message;
-                    this.closeVotation( votation );
-                    done();
-                    return;
-                }
-            }
-        }
-
-        setTimeout( () => this.runVotation( false, votation, done ), this.waitTime );
+    closeVotation( room, veredict ) {
+        this.closeVotationHandler( room, veredict );
     }
 }
 
-module.exports = ( broadcastVotation, closeVotationHandler, waitTime) => new VotingController( broadcastVotation, closeVotationHandler, waitTime );
+module.exports = ( broadcastVotation, closeVotationHandler ) => new VotingController( broadcastVotation, closeVotationHandler );
