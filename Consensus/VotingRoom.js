@@ -27,7 +27,7 @@ class VotingRoom {
         this.veredicts = {};
         
         //Time to wait until force the votation ending (avoid high latency and deal with absent votations)
-        this.votationTTL = 1000;
+        this.votationTTL = 2000;
         //Time to wait for all nodes to receive the votation
         this.propagationTime = 0;
 
@@ -62,10 +62,12 @@ class VotingRoom {
 
     memberJoined() {
         this.members++;
+        console.log( 'Someone joined ' + this.room + ' (' + this.members + ' members)');
     }
 
     memberLeft() {
         this.members--;
+        console.log( 'Someone left ' + this.room + '(' + this.members + ' members)');
     }
 
     /*
@@ -84,7 +86,7 @@ class VotingRoom {
         @vote: the last received vote
     */
     voteReceived( vote ) {
-        console.log( 'vote received' );
+        console.log( 'vote received ' + this.room );
         //console.log( vote.veredict );
         
         //When no veredict defined, the votation is closed. (closeVotation deleted it)

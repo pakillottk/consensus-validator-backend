@@ -39,7 +39,11 @@ class VotingController {
             );
             this.rooms[ room ] = roomObj;
         }
-        this.socketsRooms[ socketId ] = roomObj;
+        if( !this.socketsRooms[ socketId ] ) {
+            this.socketsRooms[ socketId ] = [ roomObj];
+        } else {
+            this.socketsRooms[ socketId ].push( roomObj );
+        }
         roomObj.memberJoined();
     }
 
@@ -47,22 +51,24 @@ class VotingController {
         Removes a socket from a VotingRoom
     */
     removeSocket( socketId ) {
-        const room = this.socketsRooms[ socketId ]
-        delete this.socketsRooms[ socketId ];
-        if( room ) {
-            room.memberLeft();
-            if( room.members === 0 ) {
-                delete this.rooms[ room.room ];
-            }
+        const rooms = this.socketsRooms[ socketId ]
+        if( rooms ) {
+            rooms.forEach( room => {
+                room.memberLeft();
+                if( room.members === 0 ) {
+                    delete this.rooms[ room.room ];
+                }
+            });            
         }
+        delete this.socketsRooms[ socketId ];
     }
 
-    openVotation( votation ) {
-        this.socketsRooms[ votation.openedBy ].openVotation( votation );
+    openVotation( room, votation ) {
+        this.rooms[ room ].openVotation( votation );
     }
 
-    voteReceived( vote ) {
-        this.socketsRooms[ vote.votation.openedBy ].voteReceived( vote );
+    voteReceived( room, vote ) {
+        this.rooms[ room ].voteReceived( vote );
     }
 
     closeVotation( room, veredict ) {

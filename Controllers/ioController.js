@@ -33,12 +33,12 @@ module.exports = ( io ) => {
             VotingController.removeSocket( socket.id );
         })
 
-        socket.on( 'open_votation', ( votation ) => {
-            VotingController.openVotation( votation );
+        socket.on( 'open_votation', ( data ) => {
+            VotingController.openVotation( data.room, data.votation );
         });
 
-        socket.on( 'vote', ( veredict ) => {
-            VotingController.voteReceived( veredict );
+        socket.on( 'vote', ( data ) => {
+            VotingController.voteReceived( data.room, data.veredict );
         });
     });    
 }
