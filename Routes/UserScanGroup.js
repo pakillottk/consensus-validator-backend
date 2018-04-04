@@ -12,6 +12,12 @@ module.exports = require( './ModelRouter' )( UserScanGroupModel, '[user, group]'
             groupsIds.push( group.id );
         });
         dbQuery.addClause( 'group_id', 'in', groupsIds );
+
+        for( let i = 0; i < dbQuery.clauses.length; i++ ) {
+            if( dbQuery.clauses[ i ].field === 'company_id' ) {
+                dbQuery.clauses.splice( i, 1);
+            }
+        }
     }
 
     return dbQuery;

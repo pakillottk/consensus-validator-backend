@@ -26,10 +26,11 @@ class VotingRoom {
         this.voteCount = {};
         this.veredicts = {};
         
-        //Time to wait until force the votation ending (avoid high latency and deal with absent votations)
-        this.votationTTL = 2000;
+        //Time to wait until force the votation ending, when votes stop coming
+        //(avoid high latency and deal with absent votations)
+        this.votationTTL = 1000;
         //Time to wait for all nodes to receive the votation
-        this.propagationTime = 0;
+        this.propagationTime = 50;
 
         this.votingQueue = kue.createQueue();
         //OPEN A VOTATION
@@ -38,19 +39,24 @@ class VotingRoom {
             this.broadcastVotationHandler( job.data.room, job.data.votation );
             //when propagationTime passes
             setTimeout( () => {
+                const opened_at = new Date();
                 //set the TTL timeout
                 this.timeouts[ 
                     this.getVotationId(job.data.votation) 
                 ] = setTimeout( 
                         () => {
+                            const timeoutAt = new Date();
+                            const TTLtime = Math.abs( opened_at.getTime() - timeoutAt.getTime() );
                             console.log( 'votation timed out' );
+                            console.log( 'TTL: ' + TTLtime );
                             this.closeVotation( job.data.votation );
                         }, 
                         this.votationTTL 
                     );
 
-                done();
-            }, this.propagationTime );
+                }, this.propagationTime );
+            
+            done();
         });
 
         //PROCESS A VOTE
@@ -80,6 +86,28 @@ class VotingRoom {
         return votation.code+votation.openedBy+new Date(votation.openedAt).getTime();
     }
 
+    clearVotationTimeout( votation ) {
+        clearTimeout( this.timeouts[ this.getVotationId( votation ) ] );
+        delete this.timeouts[ this.getVotationId( votation ) ];
+    }
+
+    resetVotationTimeout( votation ) {
+        //set the TTL timeout
+        this.timeouts[ 
+            this.getVotationId(votation) 
+        ] = setTimeout( 
+                () => {
+                    const opened_at = new Date( votation.openedAt );
+                    const timeoutAt = new Date();
+                    const TTLtime = Math.abs( opened_at.getTime() - timeoutAt.getTime() );
+                    console.log( 'votation timed out' );
+                    console.log( 'TTL: ' + TTLtime );
+                    this.closeVotation( votation );
+                }, 
+                this.votationTTL 
+            );
+    }
+
     /*
         Push the vote into the votingQueue.
 
@@ -96,6 +124,11 @@ class VotingRoom {
             //Avoid cycles in vote object
             const voteThrough = {...vote};
             delete voteThrough.votation; 
+
+            //Avoid timeout kill before processing the vote.
+            this.clearVotationTimeout( vote.votation );
+            this.resetVotationTimeout( vote.votation );
+
             //Pass the vote and votation to the vote job.
             this.votingQueue.create( 'vote', { vote: voteThrough, votation: vote.votation } ).save( error => {
                 if( !error ) {
@@ -112,8 +145,11 @@ class VotingRoom {
         @votation: the votation where the vote is account.  
     */
     processVote( vote, votation ) {
+        console.log( 'processing vote' );       
+
         //Votation ended
         if( !this.veredicts[ this.getVotationId( votation ) ] ) {
+            console.log( 'attempted to process a vote of an ended votation...' );
             return;
         }
 
@@ -160,7 +196,7 @@ class VotingRoom {
             if( !error ) {                
                 console.log( 'votation broadcast enqueued' );
             }
-        }), 50);
+        }), 100);
     }
 
     /*
@@ -169,13 +205,14 @@ class VotingRoom {
         @votation: the votation to close.
     */
     closeVotation( votation ) {
+        console.log( 'votation ended' );
+
         //Already closed
         if( !this.veredicts[ this.getVotationId( votation ) ] ) {
             return;
         }
         //Clear the TTL timeout and delete it from the timeouts registry.
-        clearTimeout( this.timeouts[ this.getVotationId( votation ) ] );
-        delete this.timeouts[ this.getVotationId( votation ) ];
+        this.clearVotationTimeout( votation );
 
         const voteCount = this.voteCount[ this.getVotationId( votation ) ] || 0;
         const veredict = this.veredicts[ this.getVotationId( votation ) ];
@@ -190,6 +227,7 @@ class VotingRoom {
         //Notify the room members
         this.closeVotationHandler( this.room, {
             ...veredict,
+            openedBy: votation.openedBy,
             closed_at: new Date(),
             elapsed,
             votes: voteCount
