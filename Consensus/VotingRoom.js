@@ -19,29 +19,59 @@ class VotingRoom {
         this.closeVotationHandler = closeVotationHandler;
 
         //Nodes in the room
-        this.members = 0; 
-        //TTL exceeded votation killers
-        this.timeouts = {};
-        
+        this.members = 0;
+
         this.voteCount = {};
         this.veredicts = {};
         
         //Time to wait until force the votation ending, when votes stop coming
         //(avoid high latency and deal with absent votations)
-        this.votationTTL = 1000;
+        this.votationTTL = 500;
+        //Stores the ID of the job responsible for killing a votation
+        this.votationKillers = {};
+        //Stores the done callback of the open_votation kue job.
+        this.votationEnders = {};
 
-        this.votingQueue = kue.createQueue();
+        //Queues to avoid race conditions and make background jobs
+        //========================================================
+        this.votationsToOpenQueue = kue.createQueue();
+        this.votesQueue = kue.createQueue();
+        //Forces the end of a votation (if votes stop coming or all nodes absent)
+        this.votationKillersQueue = kue.createQueue(); 
+
         //OPEN A VOTATION
-        this.votingQueue.process( 'open_votation', ( job, done ) => {
+        this.votationsToOpenQueue.process( 'open_votation', ( job, done ) => {
             //notify all members
             this.broadcastVotationHandler( job.data.room, job.data.votation );
-            this.resetVotationTimeout( job.data.votation );
-            done();
+            //Set votation ender
+            this.votationEnders[ this.getVotationId( job.data.votation ) ] = done;
+            //Creates the votation killer
+            const killerJob = this.votationKillersQueue.create( 
+                'kill_votation', 
+                { votation: job.data.votation}
+            )
+            .removeOnComplete( true )
+            .delay( this.votationTTL )
+            .save( error => {
+                if( !error ) {
+                    this.votationKillers[ this.getVotationId( job.data.votation ) ] = killerJob.id;
+                }
+            });
         });
 
         //PROCESS A VOTE
-        this.votingQueue.process( 'vote', ( job, done ) => {
+        this.votesQueue.process( 'vote', ( job, done ) => {
             this.processVote( job.data.vote, job.data.votation );
+            done();
+        });
+
+        //KILLS A VOTATION
+        this.votationKillersQueue.process( 'kill_votation', ( job, done ) =>  {
+            //If votation didn't already ended
+            if( this.veredicts[ this.getVotationId( job.data.votation ) ] ) {
+                this.closeVotation( job.data.votation );
+            }
+
             done();
         });
     }
@@ -66,32 +96,6 @@ class VotingRoom {
         return votation.code+votation.openedBy+new Date(votation.openedAt).getTime();
     }
 
-    clearVotationTimeout( votation ) {
-        console.log( 'clearing timeout for votation: ' + this.getVotationId( votation ) );
-
-        clearTimeout( this.timeouts[ this.getVotationId( votation ) ] );
-        delete this.timeouts[ this.getVotationId( votation ) ];
-    }
-
-    resetVotationTimeout( votation ) {
-        const setTime = new Date();
-        console.log( this.getVotationId( votation ) + ' TTL set at: ' + setTime.getTime() + ' ' + setTime );
-        //set the TTL timeout
-        this.timeouts[ 
-            this.getVotationId(votation) 
-        ] = setTimeout( 
-                () => {
-                    const timeoutAt = new Date();
-                    const TTLtime = Math.abs( setTime.getTime() - timeoutAt.getTime() );
-                    console.log( 'votation timed out' );
-                    console.log( 'TTL: ' + TTLtime );
-                    console.log( 'at: ' + timeoutAt.getTime() + ' ' + timeoutAt );
-                    this.closeVotation( votation );
-                }, 
-                this.votationTTL 
-            );
-    }
-
     /*
         Push the vote into the votingQueue.
 
@@ -110,11 +114,10 @@ class VotingRoom {
             delete voteThrough.votation; 
 
             //Avoid timeout kill before processing the vote.
-            this.clearVotationTimeout( vote.votation );
-            this.resetVotationTimeout( vote.votation );
+            //(?)
 
             //Pass the vote and votation to the vote job.
-            this.votingQueue.create( 'vote', { vote: voteThrough, votation: vote.votation } ).removeOnComplete(true).save( error => {
+            this.votesQueue.create( 'vote', { vote: voteThrough, votation: vote.votation } ).removeOnComplete(true).save( error => {
                 if( !error ) {
                     console.log( 'vote enqueued' );
                 }
@@ -169,7 +172,7 @@ class VotingRoom {
         };
 
         //Pass the votation and the room name to the job.
-        this.votingQueue.create( 'open_votation', { votation, room: this.room } ).removeOnComplete(true).save( 
+        this.votationsToOpenQueue.create( 'open_votation', { votation, room: this.room } ).removeOnComplete(true).save( 
             error => {
                 if( !error ) {                
                     console.log( 'votation broadcast enqueued' );
@@ -184,14 +187,13 @@ class VotingRoom {
         @votation: the votation to close.
     */
     closeVotation( votation ) {
-        console.log( 'votation ended' );
+        console.log( 'votation ended: ' + this.getVotationId( votation ) );
 
         //Already closed
         if( !this.veredicts[ this.getVotationId( votation ) ] ) {
+            console.log( 'attempted to end and ended votation' );
             return;
         }
-        //Clear the TTL timeout and delete it from the timeouts registry.
-        this.clearVotationTimeout( votation );
 
         const voteCount = this.voteCount[ this.getVotationId( votation ) ] || 0;
         const veredict = this.veredicts[ this.getVotationId( votation ) ];
@@ -215,6 +217,11 @@ class VotingRoom {
         //Remove the stored votation data
         delete this.voteCount[ this.getVotationId( votation ) ];
         delete this.veredicts[ this.getVotationId( votation ) ];
+        delete this.votationKillers[ this.getVotationId( votation ) ];
+
+        //Ends the votation
+        this.votationEnders[ this.getVotationId( votation ) ]();
+        delete this.votationEnders[ this.getVotationId( votation ) ];
     }
 }
 
