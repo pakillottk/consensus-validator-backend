@@ -20,14 +20,13 @@ class VotingRoom {
 
         //Nodes in the room
         this.members = 0;
-
         this.voteCount = {};
         this.veredicts = {};
         
         //Time to wait until force the votation ending, when votes stop coming
         //(avoid high latency and deal with absent votations)
         this.votationTTL = 500;
-        //Stores the ID of the job responsible for killing a votation
+        //Stores the the job responsible for killing a votation
         this.votationKillers = {};
         //Stores the done callback of the open_votation kue job.
         this.votationEnders = {};
@@ -40,38 +39,61 @@ class VotingRoom {
         this.votationKillersQueue = kue.createQueue(); 
 
         //OPEN A VOTATION
-        this.votationsToOpenQueue.process( 'open_votation', ( job, done ) => {
-            //notify all members
-            this.broadcastVotationHandler( job.data.room, job.data.votation );
+        this.votationsToOpenQueue.process( 'open_votation_' + this.room, ( job, done ) => {
+            console.log( 'opening votation ('  + this.room + '): ' + this.getVotationId( job.data.votation ) );
+            const votation = job.data.votation;
+            //Initialize the votation data
+            //============================
+            this.currentVotation = null;
+            this.voteCount[ this.getVotationId( votation ) ] = 0;
+            //First veredict is: not_valid - code not exists.
+            this.veredicts[ this.getVotationId( votation ) ] = {
+                consensus: {
+                    code: votation.code
+                },
+                verification: 'not_valid',
+                message: 'El código no existe...'
+            };
+
             //Set votation ender
             this.votationEnders[ this.getVotationId( job.data.votation ) ] = done;
+            
             //Creates the votation killer
             const killerJob = this.votationKillersQueue.create( 
-                'kill_votation', 
+                'kill_votation_' + this.room, 
                 { votation: job.data.votation}
             )
             .removeOnComplete( true )
             .delay( this.votationTTL )
             .save( error => {
+                console.log( 'saving killer' );
                 if( !error ) {
-                    this.votationKillers[ this.getVotationId( job.data.votation ) ] = killerJob.id;
+                    this.votationKillers[ this.getVotationId( job.data.votation ) ] = killerJob;
+                    //notify all members
+                    this.broadcastVotationHandler( this.room, job.data.votation );
+                    console.log( 'votation opened' );
+                    console.log( new Date().getTime() + ' ' + new Date() );
                 }
             });
         });
 
         //PROCESS A VOTE
-        this.votesQueue.process( 'vote', ( job, done ) => {
+        this.votesQueue.process( 'vote_' + this.room, ( job, done ) => {
             this.processVote( job.data.vote, job.data.votation );
             done();
         });
 
         //KILLS A VOTATION
-        this.votationKillersQueue.process( 'kill_votation', ( job, done ) =>  {
+        this.votationKillersQueue.process( 'kill_votation_' + this.room, ( job, done ) =>  {
+            console.log( 'votation killer started: ' + this.getVotationId( job.data.votation ) );
             //If votation didn't already ended
             if( this.veredicts[ this.getVotationId( job.data.votation ) ] ) {
                 this.closeVotation( job.data.votation );
+            } else {
+                console.log( 'attempted to kill and ended votation' );
             }
 
+            delete this.votationKillers[ this.getVotationId( job.data.votation ) ];
             done();
         });
     }
@@ -103,26 +125,17 @@ class VotingRoom {
     */
     voteReceived( vote ) {
         console.log( 'vote received ' + this.room );
-        //console.log( vote.veredict );
+        console.log( new Date().getTime() + ' ' + new Date() );
         
-        //When no veredict defined, the votation is closed. (closeVotation deleted it)
-        if( this.veredicts[ this.getVotationId( vote.votation ) ] === undefined ) {
-            console.log( 'received a vote of an ended votation...' );
-        } else {
-            //Avoid cycles in vote object
-            const voteThrough = {...vote};
-            delete voteThrough.votation; 
-
-            //Avoid timeout kill before processing the vote.
-            //(?)
-
-            //Pass the vote and votation to the vote job.
-            this.votesQueue.create( 'vote', { vote: voteThrough, votation: vote.votation } ).removeOnComplete(true).save( error => {
-                if( !error ) {
-                    console.log( 'vote enqueued' );
-                }
-            });        
-        }
+        //Avoid cycles in vote object
+        const voteThrough = {...vote};
+        delete voteThrough.votation; 
+        //Pass the vote and votation to the vote job.
+        this.votesQueue.create( 'vote_' + this.room, { vote: voteThrough, votation: vote.votation } ).removeOnComplete(true).save( error => {
+            if( !error ) {
+                console.log( 'vote enqueued' );
+            }
+        });
     }
 
     /*
@@ -138,7 +151,7 @@ class VotingRoom {
         console.log( 'processing vote' );       
         console.log( 'time to process this vote: ' + Math.abs( now.getTime() - openedAt.getTime() ) );
 
-        //Votation ended
+        //Votation ended        
         if( !this.veredicts[ this.getVotationId( votation ) ] ) {
             console.log( 'attempted to process a vote of an ended votation...' );
             return;
@@ -161,18 +174,8 @@ class VotingRoom {
 
     //Register the votation and start the voting process
     openVotation( votation ) {
-        this.voteCount[ this.getVotationId( votation ) ] = 0;
-        //First veredict is: not_valid - code not exists.
-        this.veredicts[ this.getVotationId( votation ) ] = {
-            consensus: {
-                code: votation.code
-            },
-            verification: 'not_valid',
-            message: 'El código no existe...'
-        };
-
         //Pass the votation and the room name to the job.
-        this.votationsToOpenQueue.create( 'open_votation', { votation, room: this.room } ).removeOnComplete(true).save( 
+        this.votationsToOpenQueue.create( 'open_votation_' + this.room, { votation, room: this.room } ).removeOnComplete(true).save( 
             error => {
                 if( !error ) {                
                     console.log( 'votation broadcast enqueued' );
@@ -187,7 +190,7 @@ class VotingRoom {
         @votation: the votation to close.
     */
     closeVotation( votation ) {
-        console.log( 'votation ended: ' + this.getVotationId( votation ) );
+        console.log( 'votation ended (' + this.room + '): ' + this.getVotationId( votation ) );
 
         //Already closed
         if( !this.veredicts[ this.getVotationId( votation ) ] ) {
@@ -217,7 +220,6 @@ class VotingRoom {
         //Remove the stored votation data
         delete this.voteCount[ this.getVotationId( votation ) ];
         delete this.veredicts[ this.getVotationId( votation ) ];
-        delete this.votationKillers[ this.getVotationId( votation ) ];
 
         //Ends the votation
         this.votationEnders[ this.getVotationId( votation ) ]();

@@ -2,12 +2,12 @@ module.exports = ( io ) => {
     const VotingController = require('../Consensus/VotingController')( 
         ( room, votation ) => {
             console.log( 'broadcast to: ' + room );
-            io.to( room ).emit( 'votation_opened', votation );
+            io.to( room ).emit( 'votation_opened', {room, votation} );
         },         
         ( room, consensus ) => {
             console.log( 'emitting votation end to: ' + room );
             console.log( consensus );
-            io.to( room ).emit( 'votation_closed', consensus );
+            io.to( room ).emit( 'votation_closed', {room, votation: consensus} );
         }
     );
 

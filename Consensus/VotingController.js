@@ -40,7 +40,7 @@ class VotingController {
             this.rooms[ room ] = roomObj;
         }
         if( !this.socketsRooms[ socketId ] ) {
-            this.socketsRooms[ socketId ] = [ roomObj];
+            this.socketsRooms[ socketId ] = [ roomObj ];
         } else {
             this.socketsRooms[ socketId ].push( roomObj );
         }
