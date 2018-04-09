@@ -2,6 +2,7 @@ const ModelController = require('./ModelController').class
 const Deliver = require( '../Database/Deliver' );
 const Type = require( '../Database/Type' );
 const Code = require( '../Database/Code' );
+const LogEntry = require('../Database/LogEntry');
 const kue = require( 'kue' );
 const crypto = require( 'crypto' );
 const { transaction } = require( 'objection' );
@@ -13,8 +14,17 @@ class SaleController extends ModelController {
         this.jobsResponses = {};
         this.queue = kue.createQueue();
         this.queue.process( 'sale', ( job, done ) => {
-            this.createSale( job.id, job.data.data, job.data.including, job.data.query, done );
+            this.createSale( job.id, job.data.data, job.data.including, job.data.query, job.data.user, done );
         });
+    }
+
+    async getTypeData( type_id ) {
+        const type = await Type.query().where( 'id', '=', type_id );
+        if( type.length === 0 ) {
+            return null;
+        }
+
+        return type[0];
     }
 
     async getAuthSales( type_id, user_id ) {
@@ -48,7 +58,7 @@ class SaleController extends ModelController {
         return soldByMe;
     }
 
-    async createSale( id, data, including, query, done ) {
+    async createSale( id, data, including, query, user, done ) { 
         const res = this.jobsResponses[ id ];
         if( !res ) {
             throw new Error( "There's no response object for this job: " + job );
@@ -56,6 +66,7 @@ class SaleController extends ModelController {
 
         let trx;
         try {
+            const typeData = await this.getTypeData( data.type_id );
             //Get tickets delivered to user
             const authSales = await this.getAuthSales( data.type_id, data.user_id );
             if( authSales === 0 ) {
@@ -89,19 +100,47 @@ class SaleController extends ModelController {
                     created_at: new Date(),
                     updated_at: new Date()
                 });
+                const log = await LogEntry.query( trx ).insert({
+                    user_id: user.id,
+                    session_id: typeData.session_id,
+                    level: 'success',
+                    msg: user.username + 
+                        ' ha vendido una entrada de ' + 
+                        typeData.type + ' ' + typeData.price + '€ ' + 
+                        '(' +
+                        authSales + ' autorizadas. ' +
+                        (soldByMe + 1) + ' vendidas.)',
+                    date: new Date()
+                });
 
                 await trx.commit();
 
-                res.send( sale );
+                res.status(200).send( sale );
                 done();
             } else {
                 if( trx ) {
                     await trx.rollback();
                 }
+
+                if( typeData ) {
+                    await LogEntry.query().insert({
+                        user_id: user.id,
+                        session_id: typeData.session_id,
+                        level: 'error',
+                        msg: user.username + 
+                            ' ha intentado vender una entrada de ' + 
+                            typeData.type + ' ' + typeData.price + '€ ' +  
+                            ' pero no tiene suficientes. (' +
+                            (authSales || 0) + ' autorizadas. ' +
+                            soldByMe + ' vendidas.)',
+                        date: new Date()
+                    });
+                }
+
                 res.status( 400 ).send({error:{message: "All sold"}});
                 done( new Error( "All sold!" ) );
             }  
-        } catch( error ) {
+        } catch( error ) {          
             res.status( 400 ).send( error );
             done( new Error( error ) );
         }
@@ -110,14 +149,14 @@ class SaleController extends ModelController {
     }
 
     async create( data, including, query, res ) {
-        const jobData =  { data, including: including, query: query };
+        const user = res.locals.oauth.token.user;        
+        const jobData =  { data, including: including, query: query, user: {id: user.id, username: user.username} };
         const job = this.queue.create( 'sale', jobData ).save(
             ( error ) => {  
                 if( !error ){
                     this.jobsResponses[ job.id ] = res;
                     return;
                 } 
-
                 res.status( 400 ).send( error );
             }
         );

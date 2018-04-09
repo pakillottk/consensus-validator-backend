@@ -25,7 +25,7 @@ class VotingRoom {
         
         //Time to wait until force the votation ending, when votes stop coming
         //(avoid high latency and deal with absent votations)
-        this.votationTTL = 500;
+        this.votationTTL = 1000;
         //Stores the the job responsible for killing a votation
         this.votationKillers = {};
         //Stores the done callback of the open_votation kue job.

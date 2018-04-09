@@ -19,4 +19,4 @@ module.exports = require( './ModelRouter' )( DeliverModel, '[user, type]', async
     dbQuery.addClause( 'type_id', 'in', typesArray );
 
     return dbQuery;
-}, DeliverController);
+}, DeliverController, true);

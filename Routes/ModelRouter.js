@@ -20,8 +20,12 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
     Router.post( '/' , async ( req, res ) => {
         try {
             const user = req.res.locals.oauth.token.user;
-            if( !req.body.user_id && passUser ) {
-                req.body.user_id = user.id;
+            if( passUser ) {
+                if( !req.body.user_id ) {
+                    req.body.user_id = user.id;
+                } else {
+                    req.body.req_user_id = user.id;
+                }
             }
             if( passRes ) {
                 const data = await controller.create( passCompany ? {...req.body, company_id: user.company_id } : req.body, including, req.query, res );
@@ -37,8 +41,12 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
     Router.put( '/:id', async ( req, res ) => {
         try {
             const user = req.res.locals.oauth.token.user;
-            if( !req.body.user_id && passUser ) {
-                req.body.user_id = user.id;
+            if( passUser ) {
+                if( !req.body.user_id ) {
+                    req.body.user_id = user.id;
+                } else {
+                    req.body.req_user_id = user.id;
+                }
             }
             const data = await controller.update( req.params.id, req.body, including );
             res.send( data );
