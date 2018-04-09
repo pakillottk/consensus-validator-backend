@@ -101,27 +101,62 @@ class DeliverController extends ModelController {
     }
 
     async update( id, data, including ) {
-        const userId = data.req_user_id;
+        const userId = data.req_user_id ? data.req_user_id : data.user_id;
         delete data.req_user_id;
 
         const oldDeliver = await this.model.query().where( 'id', '=', id );
         if( oldDeliver.length <= 0 ) {
             throw { code: 404, message: "Deliver not found." };
         }
+        //If no new ammount, keep the old one
+        if( !data.ammount ) {
+            data.ammount = oldDeliver.ammount;
+        }
         const oldAmmount = oldDeliver[0].ammount;
         const typeId = data.type_id ? data.type_id : oldDeliver[0].type_id;
         const typeData = await this.getTypeData( typeId );
+        const userToDeliver = await this.getUserData( data.req_user_id ? data.user_id : oldDeliver[0].user_id );
         const availableAmmount = this.getAvailableAmmount( typeData );
         const totalAmmount = await this.getTotalAmmount( typeId );
         
         const canDeliver = availableAmmount >= (parseInt(totalAmmount) - parseInt( oldAmmount ) + parseInt(data.ammount));
         if( canDeliver ) {
+            let trx;
             try {
-                return await this.model.query().eager( including ).patchAndFetchById( id, {...data, updated_at: new Date()} );
-            } catch( error ) {
+                trx = await transaction.start( this.model.knex() );
+                
+                const delivery = await this.model.query().eager( including ).patchAndFetchById( id, {...data, updated_at: new Date()} );
+                await LogEntry.query( trx ).insert({
+                    user_id: userId,
+                    session_id: typeData.session_id,
+                    level: 'success',
+                    msg: 'Modificada una entrega. De ' + oldAmmount + ' pasa a tener ' + data.ammount + 
+                        ' entradas de ' + typeData.type + ' ' + typeData.price + '€ para ' +
+                        userToDeliver.username + '. (total entregadas: ' +
+                        (parseInt(totalAmmount) - parseInt( oldAmmount ) + parseInt(data.ammount)) + '. hay: ' + availableAmmount + ')',
+                    date: new Date()
+                });
+
+                await trx.commit();
+
+                return delivery;
+            } catch( error ) {            
+                if( trx ) {
+                    await trx.rollback();
+                }
                 throw { code: error.code, message: error.detail };
             }
         } else {
+            await LogEntry.query().insert({
+                user_id: userId,
+                session_id: typeData.session_id,
+                level: 'error',
+                msg: 'Se intentó modificar una entrega. De ' + oldAmmount + ' pasa a tener ' + data.ammount + 
+                    ' entradas de ' + typeData.type + ' ' + typeData.price + '€ para ' +
+                    userToDeliver.username + ' pero no hay suficientes. (Disponibles ' + 
+                    availableAmmount + ')',
+                date: new Date()
+            });
             throw { code: 400, message: "There are not enough tickets to deliver." };
         }
     }

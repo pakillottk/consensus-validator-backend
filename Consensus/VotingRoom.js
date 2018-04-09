@@ -215,7 +215,7 @@ class VotingRoom {
             closed_at: new Date(),
             elapsed,
             votes: voteCount
-        });        
+        }, votation.openerId);        
 
         //Remove the stored votation data
         delete this.voteCount[ this.getVotationId( votation ) ];

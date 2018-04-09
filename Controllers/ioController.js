@@ -1,13 +1,37 @@
+const LogEntry = require('../Database/LogEntry');
+
 module.exports = ( io ) => {
     const VotingController = require('../Consensus/VotingController')( 
-        ( room, votation ) => {
+        async ( room, votation ) => {
             console.log( 'broadcast to: ' + room );
+            console.log( votation );
             io.to( room ).emit( 'votation_opened', {room, votation} );
+
+            const sessionId = room.split( '-' )[0];
+            const userId = votation.openerId;
+            const entry = await LogEntry.query().insert({
+                date: new Date(),
+                user_id: userId,
+                session_id: sessionId,
+                level: 'info',
+                msg: 'Ha escaneado: ' + votation.code
+            });
         },         
-        ( room, consensus ) => {
+        async ( room, consensus, openerId ) => {
             console.log( 'emitting votation end to: ' + room );
             console.log( consensus );
             io.to( room ).emit( 'votation_closed', {room, votation: consensus} );
+
+            const sessionId = room.split( '-' )[0];
+            const userId = openerId;
+            await LogEntry.query().insert({
+                date: new Date(),
+                user_id: userId,
+                session_id: sessionId,
+                level: consensus.verification === 'not_valid' ? 'error' : 'success',
+                msg: consensus.consensus.code + (consensus.verification === 'not_valid' ? ' no es válido' : ' es válido') +
+                     '. ' + consensus.message
+            });
         }
     );
 
@@ -38,6 +62,7 @@ module.exports = ( io ) => {
         });
 
         socket.on( 'vote', ( data ) => {
+            console.log( 'voto aqui' );
             VotingController.voteReceived( data.room, data.veredict );
         });
     });    

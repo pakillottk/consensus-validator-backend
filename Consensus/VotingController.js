@@ -71,8 +71,8 @@ class VotingController {
         this.rooms[ room ].voteReceived( vote );
     }
 
-    closeVotation( room, veredict ) {
-        this.closeVotationHandler( room, veredict );
+    closeVotation( room, veredict, openerId ) {
+        this.closeVotationHandler( room, veredict, openerId );
     }
 }
 
