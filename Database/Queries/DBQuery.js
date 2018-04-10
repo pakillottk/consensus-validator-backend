@@ -37,6 +37,20 @@ class DBQuery {
             linker
         });
     }
+
+    addAllReqParams( params, exclude, likeFields ) {
+        Object.keys( params ).forEach( param => {
+            if( exclude[ param ] ) {
+                return;
+            }
+            const value = params[ param ];
+            if( likeFields[ param ] ) {
+                this.addClause( param, 'like', '%' + value + '%' );
+            } else {
+                this.addClause( param, '=', value );
+            }
+        });
+    }
 }
 
 module.exports = DBQuery;

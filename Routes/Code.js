@@ -11,19 +11,8 @@ module.exports = require( './ModelRouter' )( CodeModel, '[type]', async ( req ) 
     }
     const queryParams = req.query;
     const dbQuery = new DBQuery( req );
-
-    Object.keys( queryParams ).forEach( param => {
-        if( param === "session" ) {
-            return;
-        }
-        const value = queryParams[ param ];
-        if( likeFields[ param ] ) {
-            dbQuery.addClause( param, 'like', '%' + value + '%' );
-        } else {
-            dbQuery.addClause( param, '=', value );
-        }
-    });
-
+    dbQuery.addAllReqParams( queryParams, { session: true }, likeFields );
+    
     if( !queryParams.session ) {
         return dbQuery;
     }
