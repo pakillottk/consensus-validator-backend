@@ -14,7 +14,9 @@ class ModelController extends Controller {
                 const clause = DBQuery.clauses[ i ];
                 if( clause.operator === 'in' ) {
                     query = query.whereIn( clause.field, clause.value );
-                } else {
+                } else if( clause.operator === 'between' ) {
+                    query = query.whereBetween( clause.field, clause.value );
+                } else {                    
                     if( i === 0 ) {
                         query = query.where( clause.field, clause.operator, clause.value );
                     } else {

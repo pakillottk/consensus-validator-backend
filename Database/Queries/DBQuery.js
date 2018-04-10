@@ -38,7 +38,8 @@ class DBQuery {
         });
     }
 
-    addAllReqParams( params, exclude, likeFields ) {
+    addAllReqParams( params, exclude, likeFields, between ) {
+        between = between || {};
         Object.keys( params ).forEach( param => {
             if( exclude[ param ] ) {
                 return;
@@ -46,6 +47,15 @@ class DBQuery {
             const value = params[ param ];
             if( likeFields[ param ] ) {
                 this.addClause( param, 'like', '%' + value + '%' );
+            } else if( between[ param ] ) {
+                this.addClause( 
+                    between[ param ].field, 
+                    'between', 
+                    [ 
+                        between[ param ].min, 
+                        between[ param .max ] 
+                    ]
+                );
             } else {
                 this.addClause( param, '=', value );
             }

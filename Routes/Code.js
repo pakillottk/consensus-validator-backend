@@ -12,7 +12,7 @@ module.exports = require( './ModelRouter' )( CodeModel, '[type]', async ( req ) 
     const queryParams = req.query;
     const dbQuery = new DBQuery( req );
     dbQuery.addAllReqParams( queryParams, { session: true }, likeFields );
-    
+
     if( !queryParams.session ) {
         return dbQuery;
     }
@@ -22,7 +22,7 @@ module.exports = require( './ModelRouter' )( CodeModel, '[type]', async ( req ) 
         typesArray.push( type.id );
     });
     
-    dbQuery.addClause( 'type_id', 'in', typesArray );
+    dbQuery.addClause( 'type_id', 'in', typesArray );   
 
     return dbQuery;
 }, CodeController);
