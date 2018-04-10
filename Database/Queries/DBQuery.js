@@ -39,6 +39,7 @@ class DBQuery {
     }
 
     addAllReqParams( params, exclude, likeFields, between ) {
+        likeFields = likeFields || {};
         between = between || {};
         Object.keys( params ).forEach( param => {
             if( exclude[ param ] ) {
@@ -53,7 +54,7 @@ class DBQuery {
                     'between', 
                     [ 
                         between[ param ].min, 
-                        between[ param .max ] 
+                        between[ param ].max 
                     ]
                 );
             } else {

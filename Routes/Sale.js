@@ -11,6 +11,22 @@ module.exports = require( './ModelRouter' )( SaleModel, '[user, code]', async ( 
     if( !sessionId ) {
         return dbQuery;
     }
+
+    dbQuery.addAllReqParams( 
+        req.query, 
+        { 
+            session: true,
+            to_sale_date: true 
+        },
+        {},
+        {
+            from_sale_date: {
+                field: 'created_at',
+                min: req.query.from_sale_date,
+                max: req.query.to_sale_date || new Date()
+            }
+        } 
+    );
     
     const sessionTypes = await Type.query().where( 'session_id', '=', sessionId );
     const typeIds = [];
