@@ -8,6 +8,19 @@ module.exports = require( './ModelRouter' )( LogEntryModel, '[user]', async ( re
         return dbQuery;
     }
 
+    dbQuery.addAllReqParams( 
+        req.query, 
+        { session: true, from_date: true, to_date: true }, 
+        {msg: true}, 
+        {
+            from_date: {
+                field: 'date',
+                min: req.query.from_date,
+                max: req.query.to_date || new Date()
+            }
+        }
+    );
+
     dbQuery.addClause( 'session_id', '=', sessionId );
     return dbQuery;
 });
