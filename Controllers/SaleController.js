@@ -140,7 +140,7 @@ class SaleController extends ModelController {
                 res.status( 400 ).send({error:{message: "All sold"}});
                 done( new Error( "All sold!" ) );
             }  
-        } catch( error ) {          
+        } catch( error ) {     
             res.status( 400 ).send( error );
             done( new Error( error ) );
         }

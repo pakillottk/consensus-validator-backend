@@ -24,10 +24,13 @@ var io = require('socket.io')( server, {
   pingInterval: 5000,
   pingTimeout: 10000
 });
-app.set( 'io', io );
 
-const ioController = require('../Controllers/ioController')
-ioController( io );
+const ioController = require('../Controllers/ioController')( io );
+
+//Bind io to Models
+const LogEntry = require('../Database/LogEntry');
+LogEntry.io = ioController;
+
 
 /**
  * Listen on provided port, on all network interfaces.

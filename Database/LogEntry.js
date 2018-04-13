@@ -18,6 +18,15 @@ class LogEntry extends Model {
             }
         }
     };
+
+    async $afterInsert( context ) {
+        await super.$afterInsert( context );
+        
+        const sessionId = this.session_id;
+
+        const ioController = LogEntry.io;
+        ioController.emitTo( sessionId + '-session', 'log_entry_added' ,this );
+    }
 }
 
 module.exports = LogEntry;

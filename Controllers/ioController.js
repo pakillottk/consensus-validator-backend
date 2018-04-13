@@ -62,8 +62,13 @@ module.exports = ( io ) => {
         });
 
         socket.on( 'vote', ( data ) => {
-            console.log( 'voto aqui' );
             VotingController.voteReceived( data.room, data.veredict );
         });
-    });    
+    }); 
+    
+    return {
+        emitTo: ( room, type, data ) => {
+            io.to( room ).emit( type, data );
+        }
+    }
 }
