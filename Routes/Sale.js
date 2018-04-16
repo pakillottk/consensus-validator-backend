@@ -5,7 +5,7 @@ const Code = require( '../Database/Code' );
 const Type = require( '../Database/Type' );
 const DBQuery = require( '../Database/Queries/DBQuery' );
 
-module.exports = require( './ModelRouter' )( SaleModel, '[user, code]', async ( req ) => {
+module.exports = require( './ModelRouter' )( SaleModel, '[user, code.[type]]', async ( req ) => {
     const dbQuery = new DBQuery( req );
     const sessionId = req.query.session;
     if( !sessionId ) {

@@ -18,6 +18,26 @@ class Code extends Model {
             },
         }
     };
+
+    async $afterInsert( context ) {
+        await super.$afterInsert( context );
+        
+        const type = await Type.query().select( 'session_id' ).where( 'id', '=', this.type_id );
+        const sessionId = type[0].session_id;
+
+        const ioController = Code.io;
+        ioController.emitTo( sessionId + '-session', 'code_added' ,this );        
+    }
+
+    async $afterUpdate( context ) {
+        await super.$afterUpdate( context );
+        
+        const type = await Type.query().select( 'session_id' ).where( 'id', '=', this.type_id );
+        const sessionId = type[0].session_id;
+
+        const ioController = Code.io;
+        ioController.emitTo( sessionId + '-session', 'code_updated' ,this );
+    }
 }
 
 module.exports = Code;

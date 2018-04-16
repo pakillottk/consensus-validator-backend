@@ -18,7 +18,6 @@ app.set('port', port);
 /**
  * Create HTTP server.
  */
-
 var server = http.createServer(app);
 var io = require('socket.io')( server, {
   pingInterval: 5000,
@@ -30,7 +29,10 @@ const ioController = require('../Controllers/ioController')( io );
 //Bind io to Models
 const LogEntry = require('../Database/LogEntry');
 LogEntry.io = ioController;
-
+const Sales = require('../Database/Sales');
+Sales.io = ioController;
+const Code = require('../Database/Code');
+Code.io = ioController;
 
 /**
  * Listen on provided port, on all network interfaces.
