@@ -109,7 +109,7 @@ class SaleController extends ModelController {
                         typeData.type + ' ' + typeData.price + '€ ' + 
                         '(' +
                         authSales + ' autorizadas. ' +
-                        (soldByMe + 1) + ' vendidas.)',
+                        (parseInt(soldByMe) + 1) + ' vendidas.)',
                     date: new Date()
                 });
 
