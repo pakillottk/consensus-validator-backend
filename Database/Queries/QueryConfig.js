@@ -33,6 +33,17 @@ const QueryConfig = {
                 admin: true,
                 supervisor: true
             },
+            entities: ['users'],
+            field: 'id',
+            operator: '=',
+            user_field: 'id'
+        },
+        {
+            role_exceptions: {
+                superadmin: true,
+                admin: true,
+                supervisor: true
+            },
             entities: [ 'deliveries', 'sales' ],
             field: 'user_id',
             operator: '=',
