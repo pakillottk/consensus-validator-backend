@@ -22,6 +22,7 @@ class VotingRoom {
         this.members = 0;
         this.voteCount = {};
         this.veredicts = {};
+        this.activeCodes = {};
         
         //Time to wait until force the votation ending, when votes stop coming
         //(avoid high latency and deal with absent votations)
@@ -30,6 +31,12 @@ class VotingRoom {
         this.votationKillers = {};
         //Stores the done callback of the open_votation kue job.
         this.votationEnders = {};
+        //Max votations opened at same time (only when code to vote is not
+        //already opened)
+        this.concurrencyLevel = 20;
+        //Time to wait when a code is already in a non closed votation and
+        //a node tried to open a new votation
+        this.duplicateCodeWaitTime = 100;
 
         //Queues to avoid race conditions and make background jobs
         //========================================================
@@ -39,42 +46,8 @@ class VotingRoom {
         this.votationKillersQueue = kue.createQueue(); 
 
         //OPEN A VOTATION
-        this.votationsToOpenQueue.process( 'open_votation_' + this.room, ( job, done ) => {
-            console.log( 'opening votation ('  + this.room + '): ' + this.getVotationId( job.data.votation ) );
-            const votation = job.data.votation;
-            //Initialize the votation data
-            //============================
-            this.currentVotation = null;
-            this.voteCount[ this.getVotationId( votation ) ] = 0;
-            //First veredict is: not_valid - code not exists.
-            this.veredicts[ this.getVotationId( votation ) ] = {
-                consensus: {
-                    code: votation.code
-                },
-                verification: 'not_valid',
-                message: 'El código no existe...'
-            };
-
-            //Set votation ender
-            this.votationEnders[ this.getVotationId( job.data.votation ) ] = done;
-            
-            //Creates the votation killer
-            const killerJob = this.votationKillersQueue.create( 
-                'kill_votation_' + this.room, 
-                { votation: job.data.votation}
-            )
-            .removeOnComplete( true )
-            .delay( this.votationTTL )
-            .save( error => {
-                console.log( 'saving killer' );
-                if( !error ) {
-                    this.votationKillers[ this.getVotationId( job.data.votation ) ] = killerJob;
-                    //notify all members
-                    this.broadcastVotationHandler( this.room, job.data.votation );
-                    console.log( 'votation opened' );
-                    console.log( new Date().getTime() + ' ' + new Date() );
-                }
-            });
+        this.votationsToOpenQueue.process( 'open_votation_' + this.room, this.concurrencyLevel, ( job, done ) => {
+            this.openVotationHandler( job, done );
         });
 
         //PROCESS A VOTE
@@ -106,6 +79,52 @@ class VotingRoom {
     memberLeft() {
         this.members--;
         console.log( 'Someone left ' + this.room + '(' + this.members + ' members)');
+    }
+
+    openVotationHandler( job, done ) {
+        const votation = job.data.votation;
+
+        if( this.activeCodes[ votation.code ] ) {
+            console.log( 'attempted to open a votation of a non resolved code. Waiting...' );
+            setTimeout( () => this.openVotationHandler( job, done ), this.duplicateCodeWaitTime );
+            return;
+        }
+
+        console.log( 'opening votation ('  + this.room + '): ' + this.getVotationId( job.data.votation ) );
+        //Initialize the votation data
+        //============================
+        this.currentVotation = null;
+        this.voteCount[ this.getVotationId( votation ) ] = 0;
+        this.activeCodes[ votation.code ] = true;
+        //First veredict is: not_valid - code not exists.
+        this.veredicts[ this.getVotationId( votation ) ] = {
+            consensus: {
+                code: votation.code
+            },
+            verification: 'not_valid',
+            message: 'El código no existe...'
+        };
+
+        //Set votation ender
+        this.votationEnders[ this.getVotationId( job.data.votation ) ] = done;
+        
+        //Creates the votation killer
+        const killerJob = this.votationKillersQueue.create( 
+            'kill_votation_' + this.room, 
+            { votation: job.data.votation}
+        )
+        .removeOnComplete( true )
+        .delay( this.votationTTL )
+        .save( error => {
+            console.log( 'saving killer' );
+            if( !error ) {
+                this.votationKillers[ this.getVotationId( job.data.votation ) ] = killerJob;
+                //notify all members
+                this.broadcastVotationHandler( this.room, job.data.votation );
+                console.log( 'votation opened' );
+                console.log( new Date().getTime() + ' ' + new Date() );
+            }
+        });
     }
 
     /*
@@ -220,6 +239,7 @@ class VotingRoom {
         //Remove the stored votation data
         delete this.voteCount[ this.getVotationId( votation ) ];
         delete this.veredicts[ this.getVotationId( votation ) ];
+        delete this.activeCodes[ votation.code ];
 
         //Ends the votation
         this.votationEnders[ this.getVotationId( votation ) ]();
