@@ -30,7 +30,8 @@ const QueryConfig = {
         {
             role_exceptions: {
                 superadmin: true,
-                admin: true
+                admin: true,
+                supervisor: true
             },
             entities: [ 'deliveries', 'sales' ],
             field: 'user_id',

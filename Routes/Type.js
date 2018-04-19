@@ -12,7 +12,7 @@ module.exports = require( './ModelRouter' )( TypeModel, '', async ( req ) => {
 
     const userId   = req.res.locals.oauth.token.user.id;
     const userRole = req.res.locals.oauth.token.user.role.role;
-    if( userRole !== 'superadmin' && userRole !== 'admin' && userRole !== 'scanner' ) {
+    if( userRole !== 'superadmin' && userRole !== 'admin' && userRole !== 'supervisor' && userRole !== 'scanner' ) {
         const deliveredTypes = await Deliver.query().where( 'user_id', '=', userId );
         const typeIds = [];
         deliveredTypes.forEach( deliver => {
