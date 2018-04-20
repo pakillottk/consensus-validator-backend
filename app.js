@@ -11,6 +11,7 @@ const helmet = require( 'helmet' );
 const cors = require( 'cors' );
 
 const app = express();
+app.use( '/public', express.static( __dirname + '/public' ) );
 
 app.oauth = new OAuthServer({
   debug: true,
