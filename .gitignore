@@ -4,3 +4,4 @@
 /seeds
 /public/images/*
 knexfile.js
+env.js

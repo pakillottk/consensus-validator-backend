@@ -1,4 +1,5 @@
 const express = require('express');
+const fileUpload = require('express-fileupload');
 const path = require('path');
 const logger = require('morgan');
 const cookieParser = require('cookie-parser');
@@ -11,6 +12,7 @@ const helmet = require( 'helmet' );
 const cors = require( 'cors' );
 
 const app = express();
+app.use( fileUpload() );
 app.use( '/public', express.static( __dirname + '/public' ) );
 
 app.oauth = new OAuthServer({

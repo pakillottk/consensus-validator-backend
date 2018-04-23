@@ -1,11 +1,12 @@
 const DBQuery = require( '../Database/Queries/DBQuery' );
 const ModelController = require( '../Controllers/ModelController' ).builder
 
-module.exports = ( model, including, queryBuilder, CustomController, passUser, passRes, passCompany ) => {
+module.exports = ( model, including, queryBuilder, CustomController, passUser, passRes, passCompany, middlewares ) => {
     const Router = require( 'express' ).Router();
     const controller = CustomController ? CustomController(model) : ModelController( model );
     queryBuilder = queryBuilder || ( async ( req ) => new DBQuery( req ) );
     including = including || '';
+    middlewares = middlewares || {};
 
     Router.get( '/', async ( req, res ) => {
         const data = await controller.index( including, await queryBuilder( req ) );
@@ -17,7 +18,7 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
         res.send( data );
     });
 
-    Router.post( '/' , async ( req, res ) => {
+    Router.post( '/' , middlewares.post || ( ( req, res, next ) => next() ), async ( req, res ) => {
         try {
             const user = req.res.locals.oauth.token.user;
             if( passUser ) {
@@ -28,9 +29,9 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
                 }
             }
             if( passRes ) {
-                const data = await controller.create( passCompany ? {...req.body, company_id: user.company_id } : req.body, including, req.query, res );
+                const data = await controller.create( passCompany ? {...req.body, company_id: user.company_id } : req.body, including, req.query, res, req.files );
             } else {
-                const data = await controller.create( passCompany ? {...req.body, company_id: user.company_id } : req.body, including, req.query );
+                const data = await controller.create( passCompany ? {...req.body, company_id: user.company_id } : req.body, including, req.query, req.files );
                 res.send( data );
             }
         } catch( error ) {
@@ -38,7 +39,7 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
         }
     });
 
-    Router.put( '/:id', async ( req, res ) => {
+    Router.put( '/:id', middlewares.post || ( ( req, res, next ) => next() ), async ( req, res ) => {
         try {
             const user = req.res.locals.oauth.token.user;
             if( passUser ) {
@@ -48,7 +49,7 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
                     req.body.req_user_id = user.id;
                 }
             }
-            const data = await controller.update( req.params.id, req.body, including );
+            const data = await controller.update( req.params.id, req.body, including, req.files );
             res.send( data );
         } catch( error ) {
             res.status( 400 ).send( error );
