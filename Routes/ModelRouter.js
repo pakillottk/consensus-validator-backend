@@ -29,9 +29,9 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
                 }
             }
             if( passRes ) {
-                const data = await controller.create( passCompany ? {...req.body, company_id: user.company_id } : req.body, including, req.query, res, req.files );
+                const data = await controller.create( (passCompany && !req.body.company_id) ? {...req.body, company_id: user.company_id } : req.body, including, req.query, res, req.files );
             } else {
-                const data = await controller.create( passCompany ? {...req.body, company_id: user.company_id } : req.body, including, req.query, req.files );
+                const data = await controller.create( (passCompany && !req.body.company_id) ? {...req.body, company_id: user.company_id } : req.body, including, req.query, req.files );
                 res.send( data );
             }
         } catch( error ) {
