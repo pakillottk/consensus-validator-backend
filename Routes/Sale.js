@@ -4,14 +4,14 @@ const SaleController = require( '../Controllers/SaleController' )
 const Code = require( '../Database/Code' );
 const Type = require( '../Database/Type' );
 const DBQuery = require( '../Database/Queries/DBQuery' );
+const QueryCompanySessions = require('../Database/Queries/Sessions/QueryCompanySessions');
+const QuerySessionsTypes = require('../Database/Queries/Types/QuerySessionsTypes');
+const QueryTypesCodes = require('../Database/Queries/Codes/QueryTypesCodes');
 
 module.exports = require( './ModelRouter' )( SaleModel, '[user, code.[type]]', async ( req ) => {
     const dbQuery = new DBQuery( req );
+    const user = req.res.locals.oauth.token.user;
     const sessionId = req.query.session;
-    if( !sessionId ) {
-        return dbQuery;
-    }
-
     dbQuery.addAllReqParams( 
         req.query, 
         { 
@@ -27,6 +27,16 @@ module.exports = require( './ModelRouter' )( SaleModel, '[user, code.[type]]', a
             }
         } 
     );
+
+    if( !sessionId ) {
+        if( user.company_id ) {
+            const sessionIds = await QueryCompanySessions( user.company_id, true, true );
+            const typesIds = await QuerySessionsTypes( sessionIds, true, true );
+            const codesIds = await QueryTypesCodes( typesIds, true, true );
+            dbQuery.addClause( 'code_id', 'in', codesIds );
+        }
+        return dbQuery;
+    }   
     
     const sessionTypes = await Type.query().where( 'session_id', '=', sessionId );
     const typeIds = [];

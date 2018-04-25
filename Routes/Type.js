@@ -4,14 +4,18 @@ const Deliver = require( '../Database/Deliver' );
 const UserScanGroup = require('../Database/UserScanGroup');
 const ScanGroup = require('../Database/ScanGroup');
 const ScanType = require('../Database/ScanType');
+const QueryCompanySessions = require('../Database/Queries/Sessions/QueryCompanySessions');
 
 module.exports = require( './ModelRouter' )( TypeModel, '', async ( req ) => {
     const sessionId = req.query.session;
     const dbQuery = new DBQuery( req );
-    dbQuery.addClause( 'session_id', '=', sessionId );
+    if( sessionId ) {
+        dbQuery.addClause( 'session_id', '=', sessionId );
+    }
 
-    const userId   = req.res.locals.oauth.token.user.id;
-    const userRole = req.res.locals.oauth.token.user.role.role;
+    const userId        = req.res.locals.oauth.token.user.id;
+    const userRole      = req.res.locals.oauth.token.user.role.role;
+    const userCompany   = req.res.locals.oauth.token.user.company_id;
     if( userRole !== 'superadmin' && userRole !== 'admin' && userRole !== 'supervisor' && userRole !== 'scanner' ) {
         const deliveredTypes = await Deliver.query().where( 'user_id', '=', userId );
         const typeIds = [];
@@ -49,6 +53,9 @@ module.exports = require( './ModelRouter' )( TypeModel, '', async ( req ) => {
         });
         //query only types in group
         dbQuery.addClause( 'id', 'in', typesIds );
+    } else if( userCompany ) {
+        const sessionsIds = await QueryCompanySessions( userCompany, true, true );
+        dbQuery.addClause( 'session_id', 'in', sessionsIds );
     }
 
     return dbQuery;
