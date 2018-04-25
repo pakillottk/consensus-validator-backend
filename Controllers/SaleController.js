@@ -1,4 +1,5 @@
 const ModelController = require('./ModelController').class
+const Session = require('../Database/Session');
 const Deliver = require( '../Database/Deliver' );
 const Type = require( '../Database/Type' );
 const Code = require( '../Database/Code' );
@@ -150,6 +151,43 @@ class SaleController extends ModelController {
 
     async create( data, including, query, res ) {
         const user = res.locals.oauth.token.user;        
+        
+        //Check if ticketoffice is open
+        const type = await Type.query().where( 'id', '=', data.type_id );
+        if( type.length === 0 ) {
+            res.status( 400 ).send( new Error( 'Type not found' ) );
+            return;
+        }
+        const session = await Session.query().where( 'id', '=', type[0].session_id);
+        if( session.length === 0 ) {
+            res.status( 400 ).send( new Error( 'Session not found' ) );
+            return;
+        }
+
+        const now = new Date();
+        const sellers_locked_at = new Date( session[0].sellers_locked_at );
+        const ticketoffice_closed_at = new Date( session[0].ticketoffice_closed_at );
+        switch( user.role.role ) {
+            case 'seller': {
+                if( now > sellers_locked_at ) {
+                    res.status( 400 ).send( 'Sales are closed' );
+                    return;
+                }
+
+                break;
+            }
+
+            default: {
+                if( now > ticketoffice_closed_at ) {
+                    res.status( 400 ).send( 'Sales are closed' );
+                    return;
+                }
+
+                break;
+            }
+        }
+
+        //If tikcetoffice is open for the user, attempt to sell
         const jobData =  { data, including: including, query: query, user: {id: user.id, username: user.username} };
         const job = this.queue.create( 'sale', jobData ).save(
             ( error ) => {  

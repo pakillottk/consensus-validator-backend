@@ -35,7 +35,7 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
                 res.send( data );
             }
         } catch( error ) {
-            res.status( 400 ).send( error );
+            res.status( 400 ).send( error.message );
         }
     });
 
@@ -52,7 +52,7 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
             const data = await controller.update( req.params.id, req.body, including, req.files );
             res.send( data );
         } catch( error ) {
-            res.status( 400 ).send( error );
+            res.status( 400 ).send( error.message );
         }
     });
 
@@ -61,7 +61,7 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
             const deleted = await controller.delete( req.params.id );
             res.send( deleted );
         } catch( error ) {
-            res.status( 400 ).send( error );
+            res.status( 400 ).send( error.message );
         }
     });
 
