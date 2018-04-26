@@ -83,6 +83,9 @@ Router.use( '/deliveries', DeliverRoutes );
 const SaleRoutes = require( './Routes/Sale' );
 Router.use( '/sales', SaleRoutes );
 
+const PaymentRoutes = require( './Routes/Payment' );
+Router.use( '/payments', PaymentRoutes );
+
 const ScanGroupRoutes = require( './Routes/ScanGroups' );
 Router.use( '/scangroups', ScanGroupRoutes );
 
