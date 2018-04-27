@@ -1,7 +1,7 @@
 const PaymentModel = require( '../Database/Payment' );
 const DBQuery = require( '../Database/Queries/DBQuery' );
 
-module.exports = require( './ModelRouter' )( PaymentModel, '', async ( req ) => {
+module.exports = require( './ModelRouter' )( PaymentModel, '[user]', async ( req ) => {
     const dbQuery = new DBQuery( req );
     const user = req.res.locals.oauth.token.user;
     const sessionId = req.query.session;
