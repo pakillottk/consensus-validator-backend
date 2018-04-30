@@ -55,7 +55,7 @@ class ModelController extends Controller {
         try {
             const created = await this.model.query().eager( including ).insert( {...data, created_at: new Date(), updated_at: new Date()} );
             return created;
-        } catch( error ) {           
+        } catch( error ) {
             throw { code: error.code, message: error.detail };
         }
     }

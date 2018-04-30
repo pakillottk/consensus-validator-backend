@@ -86,6 +86,9 @@ Router.use( '/sales', SaleRoutes );
 const PaymentRoutes = require( './Routes/Payment' );
 Router.use( '/payments', PaymentRoutes );
 
+const ComissionRoutes = require( './Routes/Comission' );
+Router.use( '/comissions', ComissionRoutes );
+
 const ScanGroupRoutes = require( './Routes/ScanGroups' );
 Router.use( '/scangroups', ScanGroupRoutes );
 

@@ -44,7 +44,7 @@ const QueryConfig = {
                 admin: true,
                 supervisor: true
             },
-            entities: [ 'deliveries', 'sales', 'payments' ],
+            entities: [ 'deliveries', 'sales', 'payments', 'comissions' ],
             field: 'user_id',
             operator: '=',
             user_field: 'id'
