@@ -11,7 +11,9 @@ module.exports = require( './ModelRouter' )( PaymentModel, '[user]', async ( req
             session: true,
             to_date: true 
         },
-        {},
+        {
+            paid_to: true
+        },
         {
             from_date: {
                 field: 'created_at',
