@@ -10,12 +10,12 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
 
     Router.get( '/', async ( req, res ) => {
         const data = await controller.index( including, await queryBuilder( req ) );
-        res.send( data );
+        res.status(200).send( data );
     });
 
     Router.get( '/:id', async ( req, res ) => {
         const data = await controller.get( req.params.id, '', await queryBuilder( req ) );
-        res.send( data );
+        res.status(200).send( data );
     });
 
     Router.post( '/' , middlewares.post || ( ( req, res, next ) => next() ), async ( req, res ) => {
@@ -32,7 +32,7 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
                 const data = await controller.create( (passCompany && !req.body.company_id) ? {...req.body, company_id: user.company_id } : req.body, including, req.query, res, req.files );
             } else {
                 const data = await controller.create( (passCompany && !req.body.company_id) ? {...req.body, company_id: user.company_id } : req.body, including, req.query, req.files );
-                res.send( data );
+                res.status(200).send( data );
             }
         } catch( error ) {
             res.status( 400 ).send( error.message );
@@ -50,7 +50,7 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
                 }
             }
             const data = await controller.update( req.params.id, req.body, including, req.files );
-            res.send( data );
+            res.status(200).send( data );
         } catch( error ) {
             res.status( 400 ).send( error.message );
         }
@@ -59,7 +59,7 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
     Router.delete( '/:id', async( req, res ) => {
         try {
             const deleted = await controller.delete( req.params.id );
-            res.send( deleted );
+            res.status(200).send( deleted );
         } catch( error ) {
             res.status( 400 ).send( error.message );
         }

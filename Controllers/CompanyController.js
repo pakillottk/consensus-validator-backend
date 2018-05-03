@@ -25,7 +25,8 @@ class CompanyController extends ModelController {
             }
 
             const logoImg = files.logo_url;
-            const filename = data.name + new Date().getTime();
+            let filename = data.name + new Date().getTime() + logoImg.name;
+            filename = filename.replace( /\s/g, '-' );
             await this.moveImage( logoImg, env.PROJECT_DIR + '/public/images/' + filename );
 
             data.logo_url = 'public/images/' + filename;
@@ -49,8 +50,9 @@ class CompanyController extends ModelController {
                     oldCompany = oldCompany[0];
 
                     const logoImg = files.logo_url;
-                    const filename = (data.name ? data.name : oldCompany.name) + new Date().getTime();
-
+                    let filename = (data.name ? data.name : oldCompany.name) + new Date().getTime() + logoImg.name;
+                    filename = filename.replace( /\s/g, '-' );
+                    
                     await this.moveImage( 
                         logoImg, 
                         env.PROJECT_DIR + 
