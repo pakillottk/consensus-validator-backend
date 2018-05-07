@@ -106,9 +106,11 @@ class ModelController extends Controller {
 
     async create( data, including, query, files ) {
         try {
-            if( Object.keys(files) ) {
-                data = await this.storeFiles( data, files );
-            }
+            if( files ) {
+                if( Object.keys(files) ) {
+                    data = await this.storeFiles( data, files );
+                }
+            }            
             const created = await this.model.query().eager( including ).insert( {...data, created_at: new Date(), updated_at: new Date()} );
             return created;
         } catch( error ) {
@@ -119,14 +121,15 @@ class ModelController extends Controller {
     //Updated the instance by Id
     async update( id, data, including, files ) {
         try {
-            if( Object.keys(files) ) {
-                const oldData = await this.model.query().findById( id );
-                this.removeOldFields( files, oldData );
-                data = await this.storeFiles( data, files );
-            }
+            if( files ) {
+                if( Object.keys(files) ) {
+                    const oldData = await this.model.query().findById( id );
+                    this.removeOldFields( files, oldData );
+                    data = await this.storeFiles( data, files );
+                }
+            }            
             return await this.model.query().eager( including ).patchAndFetchById( id, {...data, updated_at: new Date()} );
         } catch( error ) {
-            console.log( error );
             throw { code: error.code, message: error.detail };
         }
     }
