@@ -29,11 +29,13 @@ module.exports.getClient = async ( clientId, clientSecret ) => {
     }
 }
 
-module.exports.getRefreshTokens = async ( bearerToken ) => {
-    const token = await OAuthToken.query().findOne({ access_token: bearerToken });
+module.exports.getRefreshToken = async ( refreshToken ) => {
+    const token = await OAuthToken.query().findOne({ refresh_token: refreshToken });
     if( token ) {
         return token;
     }
+
+    return null;
 }
 
 module.exports.getUser = async ( username, password ) => {

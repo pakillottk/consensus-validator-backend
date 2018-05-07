@@ -14,7 +14,7 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
     });
 
     Router.get( '/:id', async ( req, res ) => {
-        const data = await controller.get( req.params.id, '', await queryBuilder( req ) );
+        const data = await controller.get( req.params.id, including, await queryBuilder( req ) );
         res.status(200).send( data );
     });
 

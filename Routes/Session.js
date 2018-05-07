@@ -3,7 +3,7 @@ const SessionModel = require( '../Database/Session' );
 const QueryUserDelivers = require('../Database/Queries/Delivers/QueryUserDelivers');
 const Type = require('../Database/Type');
 
-module.exports = require( './ModelRouter' )( SessionModel, '', async ( req ) => {
+module.exports = require( './ModelRouter' )( SessionModel, '[company]', async ( req ) => {
     const user = req.res.locals.oauth.token.user;
     const dbQuery = new DBQuery( req );
     dbQuery.addAllReqParams( 
