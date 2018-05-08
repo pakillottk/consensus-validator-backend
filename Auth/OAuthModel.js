@@ -81,6 +81,18 @@ module.exports.saveToken = async ( token, client, user ) => {
     return false;
 }
 
+module.exports.revokeToken = async ( token ) => {
+    try {
+        await OAuthToken.query().update({
+            refresh_token_expires_on: new Date()
+        }).where( 'refresh_token', '=', token.refreshToken );
+
+        return true;
+    } catch( error ) {
+        return false;
+    }
+}
+
 module.exports.logout = async ( token ) => {
     try {       
         await OAuthToken.query().delete().where( 'access_token', token.accessToken );
