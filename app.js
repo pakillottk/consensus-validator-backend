@@ -43,7 +43,7 @@ app.use( (req, res, next) => {
 const tokensClearer = ClearTokensJobs(); 
 
 //LOGIN ROUTE
-app.post( '/login', app.oauth.token() );
+app.post( '/login', app.oauth.token({requireClientAuthentication:{refresh_token: false}}) );
 app.get( '/me', app.oauth.authenticate(), (req, res) => {
   res.send( req.res.locals.oauth.token.user );
 });

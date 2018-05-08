@@ -30,9 +30,16 @@ module.exports.getClient = async ( clientId, clientSecret ) => {
 }
 
 module.exports.getRefreshToken = async ( refreshToken ) => {
-    const token = await OAuthToken.query().findOne({ refresh_token: refreshToken });
+    const token = await OAuthToken.query().eager('[user, user.[role, company]]').findOne({ refresh_token: refreshToken });
     if( token ) {
-        return token;
+        return {
+            refreshToken,
+            refreshTokenExpiresAt: token.refresh_token_expires_on,
+            client: {
+                id: token.client_id
+            },
+            user: token.user
+        };
     }
 
     return null;
