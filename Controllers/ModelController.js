@@ -27,7 +27,7 @@ class ModelController extends Controller {
             throw new Error( 'No file to process!' );
         }
 
-        let filename = filenamePrefix + file.name + new Date().getTime() ;
+        let filename = filenamePrefix + new Date().getTime() + file.name;
         filename = filename.replace( /\s/g, '-' );
         await this.moveImage( file, env.PROJECT_DIR + '/public/images/' + filename );
 
