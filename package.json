@@ -1,6 +1,6 @@
 {
-  "name": "backend",
-  "version": "0.0.0",
+  "name": "consensus-validator-backend",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "start": "PORT=3005 node ./bin/www",
@@ -22,12 +22,12 @@
     "objection": "^0.9.4",
     "objection-password": "^0.2.0",
     "pg": "^7.4.1",
-    "serve-favicon": "~2.4.5"
-  },
-  "devDependencies": {
+    "serve-favicon": "~2.4.5",
     "cors": "^2.8.4",
     "helmet": "^3.10.0",
-    "nodemon": "^1.14.12",
     "socket.io": "^2.0.4"
+  },
+  "devDependencies": {
+    "nodemon": "^1.14.12",
   }
 }
