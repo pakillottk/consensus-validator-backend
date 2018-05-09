@@ -214,6 +214,9 @@ class VotingRoom {
         //Already closed
         if( !this.veredicts[ this.getVotationId( votation ) ] ) {
             console.log( 'attempted to end and ended votation' );
+            if( this.activeCodes[ votation.code ] ) {
+                delete this.activeCodes[ votation.code ];
+            }
             return;
         }
 
@@ -230,6 +233,7 @@ class VotingRoom {
         //Notify the room members
         this.closeVotationHandler( this.room, {
             ...veredict,
+            offline: votation.offline,
             openedBy: votation.openedBy,
             closed_at: new Date(),
             elapsed,
