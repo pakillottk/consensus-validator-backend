@@ -12,9 +12,6 @@ const helmet = require( 'helmet' );
 const cors = require( 'cors' );
 
 const app = express();
-app.use( fileUpload() );
-app.use( '/public', express.static( __dirname + '/public' ) );
-
 app.oauth = new OAuthServer({
   debug: true,
   model:  OAuthModel
@@ -39,6 +36,9 @@ app.use( (req, res, next) => {
 
   next();
 });
+app.use( fileUpload() );
+app.use( '/public', express.static( __dirname + '/public' ) );
+
 
 const tokensClearer = ClearTokensJobs(); 
 
