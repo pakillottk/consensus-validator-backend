@@ -29,7 +29,7 @@ module.exports = require( './ModelRouter' )( SaleModel, '[user, code.[type]]', a
     );
 
     if( !sessionId ) {
-        if( user.company_id ) {
+        if( user.company_id && user.role.role !== 'superadmin' ) {
             const sessionIds = await QueryCompanySessions( user.company_id, true, true );
             const typesIds = await QuerySessionsTypes( sessionIds, true, true );
             const codesIds = await QueryTypesCodes( typesIds, true, true );
