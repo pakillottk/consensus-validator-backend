@@ -3,10 +3,12 @@
 /**
  * Module dependencies.
  */
-
+var fs = require('fs');
 var app = require('../app');
 var debug = require('debug')('backend:server');
 var http = require('http');
+var https = require('https');
+var env = require('../env');
 
 /**
  * Get port from environment and store in Express.
@@ -16,9 +18,17 @@ var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
 /**
- * Create HTTP server.
+ * Create HTTP or HTTPS server.
  */
-var server = http.createServer(app);
+var server;
+if( env.protocol === "http" ) {
+  server = http.createServer(app);
+} else {
+  server = https.createServer({
+    key: fs.readFileSync( env.serverOptions.ssl.keyFile ),
+    cert: fs.readFileSync( env.serverOptions.ssl.certFile ),
+  }, app);
+}
 var io = require('socket.io')( server, {
   pingInterval: 5000,
   pingTimeout: 10000
