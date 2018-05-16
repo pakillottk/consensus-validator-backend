@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "PORT=3005 node ./bin/www",
-    "watch": "PORT=3005 nodemon ./bin/www"
+    "watch": "PORT=3005 nodemon ./bin/www",
+    "knex": "node node_modules/knex/bin/cli.js"
   },
   "dependencies": {
     "bcrypt": "^1.0.3",
