@@ -93,7 +93,6 @@ class VotingRoom {
         console.log( 'opening votation ('  + this.room + '): ' + this.getVotationId( job.data.votation ) );
         //Initialize the votation data
         //============================
-        this.currentVotation = null;
         this.voteCount[ this.getVotationId( votation ) ] = 0;
         this.activeCodes[ votation.code ] = true;
         //First veredict is: not_valid - code not exists.
@@ -234,6 +233,7 @@ class VotingRoom {
         this.closeVotationHandler( this.room, {
             ...veredict,
             offline: votation.offline,
+            codeSearch: votation.codeSearch,
             openedBy: votation.openedBy,
             closed_at: new Date(),
             elapsed,

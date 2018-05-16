@@ -31,12 +31,12 @@ class VotingController {
         let roomObj;
         if( this.rooms[ room ] ) {
             roomObj = this.rooms[ room ];
-        } else {
+        } else {          
             roomObj = new VotingRoom( 
                 room, 
                 this.broadcastVotation, 
                 this.closeVotation.bind(this)
-            );
+            );            
             this.rooms[ room ] = roomObj;
         }
         if( !this.socketsRooms[ socketId ] ) {
