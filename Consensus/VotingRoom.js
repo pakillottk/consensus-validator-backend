@@ -184,8 +184,8 @@ class VotingRoom {
             message: vote.veredict.message
         };
 
-        //CONSENSUS not possible or all voted.
-        if( vote.veredict.verification === 'not_valid' || votes === this.members ) {
+        //CONSENSUS not possible, all voted or codeSearch (code was found, search can be stopped).
+        if( vote.veredict.verification === 'not_valid' || votes === this.members || votation.codeSearch ) {
             this.closeVotation( votation );
         }
     }

@@ -164,6 +164,11 @@ class SaleController extends ModelController {
             return;
         }
 
+        //check if is in refund mode
+        if( session[0].refund_mode ) {
+            res.status(400).send( 'Sales disabled, refund mode active' );
+            return;
+        }
         const now = new Date();
         const sellers_locked_at = new Date( session[0].sellers_locked_at );
         const ticketoffice_closed_at = new Date( session[0].ticketoffice_closed_at );
