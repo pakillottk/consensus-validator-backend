@@ -64,6 +64,10 @@ module.exports = ( io ) => {
         socket.on( 'vote', ( data ) => {
             VotingController.voteReceived( data.room, data.veredict );
         });
+
+        socket.on( 'ping_req', () => {        
+            socket.emit( 'pong_res', {} );
+        });
     }); 
     
     return {
