@@ -52,6 +52,7 @@ class VotingRoom {
 
         //PROCESS A VOTE
         this.votesQueue.process( 'vote_' + this.room, ( job, done ) => {
+            console.log( job.data.votation );
             this.processVote( job.data.vote, job.data.votation );
             done();
         });
@@ -84,11 +85,11 @@ class VotingRoom {
     openVotationHandler( job, done ) {
         const votation = job.data.votation;
 
-        if( this.activeCodes[ votation.code ] ) {
+        /*if( this.activeCodes[ votation.code ] ) {
             console.log( 'attempted to open a votation of a non resolved code. Waiting...' );
             setTimeout( () => this.openVotationHandler( job, done ), this.duplicateCodeWaitTime );
             return;
-        }
+        }*/
 
         console.log( 'opening votation ('  + this.room + '): ' + this.getVotationId( job.data.votation ) );
         //Initialize the votation data
@@ -115,7 +116,7 @@ class VotingRoom {
         .removeOnComplete( true )
         .delay( this.votationTTL )
         .save( error => {
-            console.log( 'saving killer' );
+            console.log( 'saving killer with TTL ' + this.votationTTL );
             if( !error ) {
                 this.votationKillers[ this.getVotationId( job.data.votation ) ] = killerJob;
                 //notify all members
@@ -129,7 +130,6 @@ class VotingRoom {
     /*
         Returns an identifier of a votation object, based on:
             -Code scanned
-            -Id of the node who openend the votation
             -When the votation started
     */
     getVotationId( votation ) {

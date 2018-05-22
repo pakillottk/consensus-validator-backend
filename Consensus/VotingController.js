@@ -22,6 +22,8 @@ class VotingController {
         this.socketsRooms = {};
         //key: socket room name, value: a VotingRoom object
         this.rooms = {};
+        //TTL to set. If room yet not created, stores ttl to assign
+        this.ttls ={}
     }
 
     /*
@@ -29,6 +31,7 @@ class VotingController {
     */
     registerSocket( room, socketId ) {
         let roomObj;
+        const ttlToSet = this.ttls[ room ];
         if( this.rooms[ room ] ) {
             roomObj = this.rooms[ room ];
         } else {          
@@ -44,7 +47,24 @@ class VotingController {
         } else {
             this.socketsRooms[ socketId ].push( roomObj );
         }
+        if( ttlToSet !== undefined ) {
+            console.log( room + " has a start TTL of: " + ttlToSet );
+            roomObj.votationTTL = ttlToSet;
+        }
         roomObj.memberJoined();
+    }
+
+    /*
+        Adjust the TTL of a VotingRoom
+    */
+    adjustTTL( room, TTL ) {
+        //console.log( 'Room: ' + room + " TTL: " + TTL );
+        const roomObj = this.rooms[ room ];
+        if( roomObj ) {
+            roomObj.votationTTL = TTL;
+        } else {
+            this.ttls[ room ] = TTL;
+        }
     }
 
     /*

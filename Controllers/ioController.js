@@ -65,8 +65,12 @@ module.exports = ( io ) => {
             VotingController.voteReceived( data.room, data.veredict );
         });
 
-        socket.on( 'ping_req', () => {        
-            socket.emit( 'pong_res', {} );
+        socket.on( 'ping_req', (data) => {        
+            socket.emit( 'pong_res', {data} );
+        });
+
+        socket.on( 'adjust_ttl', (data) => {
+            VotingController.adjustTTL( data.room, data.TTL );
         });
     }); 
     
