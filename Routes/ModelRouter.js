@@ -65,5 +65,16 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
         }
     });
 
+    //Mass delete
+    Router.post('/bulkDelete', async( req, res ) => {
+        try {
+            const deleted = await controller.bulkDelete( req.body );
+            res.status(200).send( deleted );
+        } catch( error ) {
+            console.log( error );
+            res.status( 400 ).send( error.message );
+        }
+    })
+
     return Router;
 }

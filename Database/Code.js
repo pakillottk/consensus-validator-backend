@@ -21,12 +21,16 @@ class Code extends Model {
 
     async $afterInsert( context ) {
         await super.$afterInsert( context );
-        
-        const type = await Type.query().select( 'session_id' ).where( 'id', '=', this.type_id );
-        const sessionId = type[0].session_id;
 
         const ioController = Code.io;
-        ioController.emitTo( sessionId + '-session', 'code_added' ,this );        
+        let sessionId;
+        const type = await Type.query().select( 'session_id' ).where( 'id', '=', this.type_id );
+        if( type.length > 0 ) {
+            sessionId = type[0].session_id;
+        }
+        if( sessionId ) {
+            ioController.emitTo( sessionId + '-session', 'code_added' ,this );        
+        }
     }
 
     async $afterUpdate( context ) {

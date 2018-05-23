@@ -2,6 +2,7 @@ const Model =  require('objection').Model;
 const Controller = require( './Controller' );
 const env = require('../env');
 const fs = require('fs');
+const {transaction} = require('objection')
 
 class ModelController extends Controller {
     constructor( model ) {
@@ -82,13 +83,18 @@ class ModelController extends Controller {
         return query;
     }
 
-    index( including, DBQuery ) {       
-        let output = this.model.query();
-        if( including ) {
-            output = output.eager( including );
-        }    
-
-        return this.applyDBQuery( output, DBQuery );
+    async index( including, DBQuery ) {       
+        try {
+            let output = this.model.query();
+            if( including ) {
+                output = output.eager( including );
+            }    
+            output = this.applyDBQuery( output, DBQuery );
+            return output;
+        } catch( error ) {
+            return error;
+        }
+        
     }
 
     get( id, including, DBQuery ) {
@@ -135,17 +141,40 @@ class ModelController extends Controller {
     }
 
     //Deletes the instance by Id
-    async delete( id ) {
+    async delete( id, trx ) {
         try {
             if( Object.keys( this.model.files ) ) {
-                const oldData = await this.model.query().findById( id );
+                const oldData = await this.model.query( trx ).findById( id );
                 this.removeOldFields( this.model.files, oldData );
             }
-            const deleted = await this.model.query().deleteById( id );
+            const deleted = await this.model.query( trx ).deleteById( id );
             return { deleted_at: new Date(), deleted_id: id };
         } catch( error ) {
             throw { code: error.code, message: error.detail };
         }
+    }
+
+    async bulkDelete( data ) {
+        let trx
+        try {
+            const idsArray = JSON.parse(data.ids);
+            trx = await transaction.start( this.model.knex() );
+            for( let i = 0; i < idsArray.length; i++ ) {
+                await this.delete( idsArray[i], trx )
+            }
+
+            await trx.commit();
+
+            return { deleted_at: new Date(), deleted_ids: idsArray.length };
+        } catch( error ) {
+            if( trx ) {
+                await trx.rollback();
+            }
+
+            throw error;
+        }
+        
+        return "bad bunny baby";
     }
 }
 
