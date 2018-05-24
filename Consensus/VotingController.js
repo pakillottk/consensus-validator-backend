@@ -50,6 +50,7 @@ class VotingController {
         if( ttlToSet !== undefined ) {
             console.log( room + " has a start TTL of: " + ttlToSet );
             roomObj.votationTTL = ttlToSet;
+            delete this.ttls[ room ];
         }
         roomObj.memberJoined();
     }

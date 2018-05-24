@@ -97,13 +97,24 @@ class VotingRoom {
         this.voteCount[ this.getVotationId( votation ) ] = 0;
         this.activeCodes[ votation.code ] = true;
         //First veredict is: not_valid - code not exists.
-        this.veredicts[ this.getVotationId( votation ) ] = {
-            consensus: {
-                code: votation.code
-            },
-            verification: 'not_valid',
-            message: 'El código no existe...'
-        };
+        if( votation.codeSearch ) {
+            this.veredicts[ this.getVotationId( votation ) ] = {
+                consensus: {
+                    code: votation.code
+                },
+                verification: 'not_valid',
+                message: 'El código no existe...'
+            };
+        } else {
+            this.veredicts[ this.getVotationId( votation ) ] = {
+                consensus: {
+                    code: votation.code
+                },
+                verification: 'not_valid',
+                message: 'La votación falló. Vuelva a escanear.'
+            };
+        }
+        
 
         //Set votation ender
         this.votationEnders[ this.getVotationId( job.data.votation ) ] = done;
