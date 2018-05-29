@@ -20,12 +20,23 @@ module.exports.getClient = async ( clientId, clientSecret ) => {
         client_secret: clientSecret
     });
 
+    const grants = ['password'];
     if( client ) {
+        if( client.user_id ) {
+            grants.push( 'client_credentials' );
+        }
         return {
             clientId: client.client_id,
             clientSecret: client.client_secret,
-            grants: ['password']
+            user_id: client.user_id,
+            grants
         }
+    }
+}
+
+module.exports.getUserFromClient = async ( client ) => {
+    if( client.user_id ) {
+        return await User.query().eager('[role, company]').findOne({id: client.user_id});
     }
 }
 

@@ -1,5 +1,6 @@
 const PaymentModel = require( '../Database/Payment' );
 const DBQuery = require( '../Database/Queries/DBQuery' );
+const QueryCompanySessions = require('../Database/Queries/Sessions/QueryCompanySessions');
 
 module.exports = require( './ModelRouter' )( PaymentModel, '[user]', async ( req ) => {
     const dbQuery = new DBQuery( req );
@@ -25,6 +26,9 @@ module.exports = require( './ModelRouter' )( PaymentModel, '[user]', async ( req
 
     if( sessionId ) {
         dbQuery.addClause( 'session_id', '=', sessionId );
+    } else if( user.role.role !== 'superadmin' ) {
+        const sessionIds = await QueryCompanySessions( user.company_id, true, true );
+        dbQuery.addClause( 'session_id', 'in', sessionIds );
     }
 
     return dbQuery;
