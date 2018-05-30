@@ -26,9 +26,13 @@ module.exports = require( './ModelRouter' )( PaymentModel, '[user]', async ( req
 
     if( sessionId ) {
         dbQuery.addClause( 'session_id', '=', sessionId );
-    } else if( user.role.role !== 'superadmin' ) {
-        const sessionIds = await QueryCompanySessions( user.company_id, true, true );
-        dbQuery.addClause( 'session_id', 'in', sessionIds );
+    } else { 
+        if( user.role.role === 'ticketoffice-manager' || user.role.role === 'supervisor' ) {
+            dbQuery.addClause( 'user_id', '=', user.id );
+        } else if( user.role.role !== 'superadmin' ) {
+            const sessionIds = await QueryCompanySessions( user.company_id, true, true );
+            dbQuery.addClause( 'session_id', 'in', sessionIds );
+        }
     }
 
     return dbQuery;
