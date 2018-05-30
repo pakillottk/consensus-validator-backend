@@ -39,7 +39,7 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
         }
     });
 
-    Router.put( '/:id', middlewares.post || ( ( req, res, next ) => next() ), async ( req, res ) => {
+    Router.put( '/:id', middlewares.put || ( ( req, res, next ) => next() ), async ( req, res ) => {
         try {
             const user = req.res.locals.oauth.token.user;
             if( passUser ) {

@@ -21,7 +21,6 @@ class Code extends Model {
 
     async $afterInsert( context ) {
         await super.$afterInsert( context );
-
         const ioController = Code.io;
         let sessionId;
         const type = await Type.query().select( 'session_id' ).where( 'id', '=', this.type_id );

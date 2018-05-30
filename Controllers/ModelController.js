@@ -173,8 +173,6 @@ class ModelController extends Controller {
 
             throw error;
         }
-        
-        return "bad bunny baby";
     }
 }
 
