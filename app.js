@@ -74,6 +74,12 @@ Router.use( '/sessions', SessionRoutes );
 const TypeRoutes = require( './Routes/Type' );
 Router.use( '/types', TypeRoutes );
 
+const RecintRoutes = require( './Routes/Recint' );
+Router.use( '/recints', RecintRoutes );
+
+const RecintZoneRoutes = require( './Routes/RecintZone' );
+Router.use( '/recintzones', RecintZoneRoutes );
+
 const CodeRoutes = require( './Routes/Code' );
 Router.use( '/codes', CodeRoutes );
 
