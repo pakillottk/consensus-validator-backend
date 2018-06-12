@@ -80,6 +80,12 @@ Router.use( '/recints', RecintRoutes );
 const RecintZoneRoutes = require( './Routes/RecintZone' );
 Router.use( '/recintzones', RecintZoneRoutes );
 
+const ZonePolygonsRoutes = require( './Routes/ZonePolygons' );
+Router.use( '/zonepolygons', ZonePolygonsRoutes );
+
+const SeatRowsRoutes = require( './Routes/SeatRows' );
+Router.use( '/seatrows', SeatRowsRoutes );
+
 const CodeRoutes = require( './Routes/Code' );
 Router.use( '/codes', CodeRoutes );
 
