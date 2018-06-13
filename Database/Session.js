@@ -1,5 +1,6 @@
 const Model = require( './Model' );
 const Company = require('./Company');
+const Recint = require('./Recint');
 
 class Session extends Model {
     static get tableName() {
@@ -14,6 +15,14 @@ class Session extends Model {
                 join: {
                     from: 'Sessions.company_id',
                     to: 'Companies.id'
+                }
+            },
+            recint: {
+                relation: Model.BelongsToOneRelation,
+                modelClass: Recint,
+                join: {
+                    from: 'Sessions.recint_id',
+                    to: 'Recints.id'
                 }
             }
         }
