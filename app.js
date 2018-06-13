@@ -86,6 +86,9 @@ Router.use( '/zonepolygons', ZonePolygonsRoutes );
 const SeatRowsRoutes = require( './Routes/SeatRows' );
 Router.use( '/seatrows', SeatRowsRoutes );
 
+const SeatPricesRoutes = require( './Routes/SeatPrices' );
+Router.use( '/seatprices', SeatPricesRoutes );
+
 const CodeRoutes = require( './Routes/Code' );
 Router.use( '/codes', CodeRoutes );
 
