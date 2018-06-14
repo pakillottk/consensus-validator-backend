@@ -3,7 +3,7 @@ const Session = require( '../Database/Session' );
 const SeatPriceModel = require( '../Database/SeatPrice' );
 const QueryRecintZones = require( '../Database/Queries/RecintZones/QueryRecintZones' );
 
-module.exports = require( './ModelRouter' )( SeatPriceModel, '[zone]', async ( req ) => {
+module.exports = require( './ModelRouter' )( SeatPriceModel, '[zone, type]', async ( req ) => {
     const { session } = req.query;
     let recint;
     const dbQuery = new DBQuery( req );

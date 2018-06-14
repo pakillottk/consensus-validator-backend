@@ -1,5 +1,6 @@
 const Model = require( './Model' );
 const RecintZone = require( './RecintZone' );
+const Type = require( './Type' );
 
 class SeatPrice extends Model {
     static get tableName() {
@@ -14,6 +15,14 @@ class SeatPrice extends Model {
                 join: {
                     from: 'SeatPrices.zone_id',
                     to: 'RecintZones.id'
+                }
+            },
+            type: {
+                relation: Model.BelongsToOneRelation,
+                modelClass: Type,
+                join: {
+                    from: 'SeatPrices.type_id',
+                    to: 'Types.id'
                 }
             }
         };
