@@ -89,6 +89,9 @@ Router.use( '/seatrows', SeatRowsRoutes );
 const SeatPricesRoutes = require( './Routes/SeatPrices' );
 Router.use( '/seatprices', SeatPricesRoutes );
 
+const SeatReservesRoutes = require( './Routes/SeatReserves' );
+Router.use( '/seatreserves', SeatReservesRoutes );
+
 const CodeRoutes = require( './Routes/Code' );
 Router.use( '/codes', CodeRoutes );
 
