@@ -9,7 +9,7 @@ const QuerySessionsTypes = require('../Database/Queries/Types/QuerySessionsTypes
 const QueryTypesCodes = require('../Database/Queries/Codes/QueryTypesCodes');
 const QueryByCode = require('../Database/Queries/Codes/QueryByCode');
 
-module.exports = require( './ModelRouter' )( SaleModel, '[user, code.[type]]', async ( req ) => {
+module.exports = require( './ModelRouter' )( SaleModel, '[user, code.[type, zone]]', async ( req ) => {
     const dbQuery = new DBQuery( req );
     const user = req.res.locals.oauth.token.user;
     const sessionId = req.query.session;

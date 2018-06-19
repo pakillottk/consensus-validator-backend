@@ -3,7 +3,7 @@ const DBQuery = require( '../Database/Queries/DBQuery');
 const CodeModel = require( '../Database/Code' );
 const CodeController = require( '../Controllers/CodeController' )
 
-module.exports = require( './ModelRouter' )( CodeModel, '[type]', async ( req ) => {
+module.exports = require( './ModelRouter' )( CodeModel, '[type, zone]', async ( req ) => {
     const likeFields = {
         code: true,
         name: true,

@@ -1,5 +1,6 @@
 const Model = require( './Model' );
 const Type = require( './Type' );
+const Zone = require( './RecintZone' );
 
 class Code extends Model {
     static get tableName() {
@@ -16,6 +17,14 @@ class Code extends Model {
                     to: 'Types.id'
                 }
             },
+            zone: {
+                relation: Model.BelongsToOneRelation,
+                modelClass: Zone,
+                join: {
+                    from:'Codes.zone_id',
+                    to: 'RecintZones.id'
+                }
+            }
         }
     };
 
