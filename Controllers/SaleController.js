@@ -169,18 +169,31 @@ class SaleController extends ModelController {
         try {
             //Check if exists a reserve for user and seat
             const reserve = await SeatReserve.query()
-            .where('session_id', '=', session.id)
-            .andWhere( 'zone_id', '=', data.zone_id )
-            .andWhere( 'seat_row', '=', data.row_index )
-            .andWhere( 'seat_index', '=', data.seat_index )
-            .andWhere( 'user_id', '=', user.id )
-            .andWhere( 'expires_at', '>', new Date() );
+                                                .where('session_id', '=', session.id)
+                                                .andWhere( 'zone_id', '=', data.zone_id )
+                                                .andWhere( 'seat_row', '=', data.row_index )
+                                                .andWhere( 'seat_index', '=', data.seat_index )
+                                                .andWhere( 'user_id', '=', user.id )
+                                                .andWhere( 'expires_at', '>', new Date() );
+
             //if no reserve, cancel the selling process
             if( reserve.length === 0 ) {
                 res.status( 400 ).send( {error:{message:'Seat not reserved or no by this seller'}} );
                 done( new Error( 'Seat not reserved or no by this seller' ) );
             }
 
+            //check if seat it's already sold
+            const prev_sale = await Code.query()
+                                            .where( 'type_id', '=', data.type_id )
+                                            .andWhere( 'zone_id', '=', data.zone_id )
+                                            .andWhere( 'row_index', '=', data.row_index )
+                                            .andWhere( 'seat_index', '=', data.seat_index );
+            if( prev_sale.length > 0 ) {
+                res.status( 400 ).send( {error:{message:'Seat already sold...'}} );
+                done( new Error( 'Seat already sold...' ) );
+            }
+
+            //Create code and sale
             trx = await transaction.start( this.model.knex() );
             const hashData = data.user_id + "" + data.type_id + "" + new Date().toString() + "" + new Date().getTime(); 
             const hashCode = crypto.createHash('md5').update(hashData).digest("hex");
@@ -237,7 +250,7 @@ class SaleController extends ModelController {
                 break
             }
             default:{
-                res.status( 400 ).send( {error:{message:'Uknown ticketing flow in Session'}} );
+                res.status( 400 ).send( {error:{message:'Unknown ticketing flow in Session'}} );
                 done( new Error( 'Unknown ticketing_flow' ) );
             }
         }
@@ -290,7 +303,7 @@ class SaleController extends ModelController {
 
         //If ticketoffice is open for the user, attempt to sell
         const jobData =  { data, including: including, query: query, session: session[0], user: {id: user.id, username: user.username} };
-        const job = this.queue.create( 'sale', jobData ).save(
+        const job = this.queue.create( 'sale', jobData ).removeOnComplete( true ).save(
             ( error ) => {  
                 if( !error ){
                     this.jobsResponses[ job.id ] = res;

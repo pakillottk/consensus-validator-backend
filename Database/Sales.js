@@ -35,7 +35,7 @@ class Sales extends Model {
             const sale = await Sales.query().eager( '[code.[type]]' ).where( 'id', '=', this.id );
             const sessionId = sale[0].code.type.session_id;
 
-            const ioController = Code.io;
+            const ioController = Model.io;
             ioController.emitTo( sessionId + '-session', 'sale_added' ,this );
         }, 1000 );
         

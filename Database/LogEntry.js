@@ -24,7 +24,7 @@ class LogEntry extends Model {
         
         const sessionId = this.session_id;
 
-        const ioController = LogEntry.io;
+        const ioController = Model.io;
         ioController.emitTo( sessionId + '-session', 'log_entry_added' ,this );
     }
 }

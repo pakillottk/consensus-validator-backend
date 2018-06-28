@@ -143,11 +143,14 @@ class ModelController extends Controller {
     //Deletes the instance by Id
     async delete( id, trx ) {
         try {
+            const oldData = await this.model.query( trx ).findById( id );
             if( Object.keys( this.model.files ) ) {
-                const oldData = await this.model.query( trx ).findById( id );
                 this.removeOldFields( this.model.files, oldData );
             }
             const deleted = await this.model.query( trx ).deleteById( id );
+            if( this.model.$afterDelete ) {
+                await this.model.$afterDelete( oldData );
+            }
             return { deleted_at: new Date(), deleted_id: id };
         } catch( error ) {
             throw { code: error.code, message: error.detail };

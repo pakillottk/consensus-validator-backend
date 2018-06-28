@@ -36,12 +36,14 @@ var io = require('socket.io')( server, {
 const ioController = require('../Controllers/ioController')( io );
 
 //Bind io to Models
+const Model = require( '../Database/Model' );
+Model.io = ioController;/*
 const LogEntry = require('../Database/LogEntry');
 LogEntry.io = ioController;
 const Sales = require('../Database/Sales');
 Sales.io = ioController;
 const Code = require('../Database/Code');
-Code.io = ioController;
+Code.io = ioController;*/
 
 /**
  * Listen on provided port, on all network interfaces.
