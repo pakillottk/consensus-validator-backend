@@ -2,6 +2,7 @@ const ModelController = require('./ModelController').class
 const Session = require('../Database/Session');
 const Deliver = require( '../Database/Deliver' );
 const SeatReserve = require( '../Database/SeatReserve' );
+const SeatPrice = require( '../Database/SeatPrice' );
 const Type = require( '../Database/Type' );
 const Code = require( '../Database/Code' );
 const LogEntry = require('../Database/LogEntry');
@@ -98,6 +99,7 @@ class SaleController extends ModelController {
                     name: data.name,
                     type_id: data.type_id,
                     email: data.email,
+                    zone_id: data.zone_id,
                     validations: 0,
                     maxValidations: 1,
                     out: true,
@@ -167,6 +169,21 @@ class SaleController extends ModelController {
         //Reserved, attempt to make the sale
         let trx;
         try {
+            //Check if is a numerated ticket
+            const price = await SeatPrice.query()
+                                            .where('session_id', '=', session.id)
+                                            .andWhere( 'zone_id', '=', data.zone_id )
+                                            .andWhere( 'type_id', '=', data.type_id);
+            //No price assigned, can't sell
+            if( price.length === 0 ) {
+                res.status( 400 ).send( {error:{message:'Seat is not at sale!'}} );
+                done( new Error( 'Seat is not at sale!' ) );
+                return;
+            } else if( !price[0].numerated ) {
+                //no numerated, sell as a byTypes flow
+                await this.createSaleByTypes( id, data, including, query, user, done );
+                return;
+            }
             //Check if exists a reserve for user and seat
             const reserve = await SeatReserve.query()
                                                 .where('session_id', '=', session.id)
