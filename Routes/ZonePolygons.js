@@ -14,6 +14,6 @@ module.exports = require( './ModelRouter' )( ZonePolygon, '', async ( req ) => {
     }
     const zones = await QueryRecintZones( recint, true, true );
     dbQuery.addClause( 'zone_id', 'in', zones );
-
+    console.log( dbQuery.clauses )
     return dbQuery;
 });

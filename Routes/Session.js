@@ -29,6 +29,5 @@ module.exports = require( './ModelRouter' )( SessionModel, '[company, recint]', 
         });
         dbQuery.addClause( 'id', 'in', typesDeliveredSessionId );
     }
-
     return dbQuery;    
 }, null, false, false, true );

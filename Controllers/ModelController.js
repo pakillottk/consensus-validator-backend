@@ -60,29 +60,51 @@ class ModelController extends Controller {
 
     applyDBQuery( query, DBQuery ) {
         if( DBQuery ) {
-            for( let i = 0; i < DBQuery.clauses.length; i++ ) {
-                const clause = DBQuery.clauses[ i ];
-                if( clause.operator === 'in' ) {
-                    query = query.whereIn( clause.field, clause.value );
-                } else if( clause.operator === 'between' ) {
-                    query = query.whereBetween( clause.field, clause.value );
-                } else {                   
+            query.where( (builder) => {
+                for( let i = 0; i < DBQuery.clauses.length; i++ ) {
+                    const clause = DBQuery.clauses[ i ];
                     if( i === 0 ) {
-                        query = query.where( clause.field, clause.operator, clause.value );
-                    } else {
-                        if( clause.linker === 'and' ) {
-                            query = query.andWhere( clause.field, clause.operator, clause.value );
-                        } else {
-                            query = query.orWhere( clause.field, clause.operator, clause.value );
+                        switch( clause.operator ) {
+                            case 'in': {
+                                builder = builder.whereIn( clause.field, clause.value );
+                                break;
+                            }
+                            case 'between': {
+                                builder = builder.whereBetween( clause.field, clause.value );
+                                break;
+                            }
+                            default:
+                                builder = builder.where( clause.field, clause.operator, clause.value );
                         }
+                    } else {
+                        const isDefault = !['in','between'].includes( clause.operator );
+                        if( isDefault ) {
+                            if( clause.linker === 'and' ) {
+                                builder = builder.andWhere( clause.field, clause.operator, clause.field );
+                            } else {
+                                builder = builder.orWhere( clause.field, clause.operator, clause.field );
+                            }
+                        } else {
+                            if( clause.linker === 'and' ) {
+                                builder = clause.operator === 'in' ?
+                                            builder.whereIn( clause.field, clause.value ) 
+                                            : 
+                                            builder.whereBetween( clause.field, clause.value );
+                            } else {
+                                builder = clause.operator === 'in' ?
+                                            builder.orWhereIn( clause.field, clause.value ) 
+                                            : 
+                                            builder.orWhereBetween( clause.field, clause.value );
+                            }
+                        }                        
                     }
                 }
-            }
+            })
         }
 
-        return query;
+        return query
     }
-
+    
     async index( including, DBQuery ) {       
         try {
             let output = this.model.query();

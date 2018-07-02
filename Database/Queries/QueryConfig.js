@@ -2,7 +2,9 @@ const QueryConfig = {
     userGuards: [
         {
             role_exceptions: {
-                superadmin: true
+                superadmin: true, 
+                seller: true, 
+                'ticketoffice-manager': true
             },
             entities: [ 'companies' ],
             field: 'id',
@@ -11,7 +13,10 @@ const QueryConfig = {
         },
         {
             role_exceptions: {
-                superadmin: true
+                superadmin: true, 
+                seller: true, 
+                'ticketoffice-manager': true,
+                scanner: true
             },
             entities: [ 'sessions' ],
             field: 'company_id',
@@ -20,7 +25,9 @@ const QueryConfig = {
         },
         {
             role_exceptions: {
-                superadmin: true
+                superadmin: true, 
+                admin: true, 
+                supervisor: true
             },
             entities: [ 'users' ],
             field: 'company_id',
