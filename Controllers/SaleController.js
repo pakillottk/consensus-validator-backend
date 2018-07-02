@@ -336,7 +336,15 @@ class SaleController extends ModelController {
         try {
             trx = await transaction.start( this.model.knex() );
 
-            const toDelete = await this.model.query().findById( id );
+            const toDelete = await this.model.query().eager('[code]').findById( id );
+            //delete the reserve if is a zoned sale
+            if( toDelete.code.zone_id && toDelete.code.row_index && toDelete.code.seat_index ) {
+                await SeatReserve.query( trx ).delete()
+                                    .where( 'zone_id', '=', toDelete.code.zone_id )
+                                    .andWhere( 'seat_row', '=', toDelete.code.row_index )
+                                    .andWhere( 'seat_index', '=', toDelete.code.seat_index );
+            }
+
             const codeId = toDelete.code_id
             //Delete the sale
             const deleted = await this.model.query( trx ).deleteById( id );
@@ -348,7 +356,6 @@ class SaleController extends ModelController {
             return { deleted_at: new Date(), deleted_id: id };
         } catch( error ) {
             await trx.rollback();
-
             throw { code: error.code, message: error.detail };
         }
     }
