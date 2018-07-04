@@ -10,6 +10,10 @@ class Company extends Model {
             logo_url: true
         }
     }
+
+    static get columns() {
+        return [ 'id','nif','name','address','logo_url','phone','email', 'created_at', 'updated_at'];
+    }
 }
 
 module.exports = Company;

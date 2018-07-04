@@ -5,3 +5,4 @@
 /public/images/*
 knexfile.js
 env.js
+/test

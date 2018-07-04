@@ -5,17 +5,15 @@ const Deliver = require( '../Database/Deliver' );
 
 module.exports = require( './ModelRouter' )( SeatPriceModel, '[zone, type]', async ( req ) => {
     const { session } = req.query;
-    let recint;
-    const dbQuery = new DBQuery( req );
+    const dbQuery = new DBQuery( SeatPriceModel );
     //returns data only if session is selected
     if( !session ) {
-        dbQuery.addClause( 'zone_id', '=', -1 );
+        dbQuery.where().addClause( SeatPriceModel.listFields(SeatPriceModel,['session_id'],false)[0], '=', -1 );
         return dbQuery;
     }
     const userId        = req.res.locals.oauth.token.user.id;
     const userRole      = req.res.locals.oauth.token.user.role.role;
-    const userCompany   = req.res.locals.oauth.token.user.company_id;
-    dbQuery.addClause( 'session_id', '=', session );
+    dbQuery.where().addClause( SeatPriceModel.listFields(SeatPriceModel,['session_id'],false)[0], '=', session );
 
     if( !['superadmin', 'admin', 'supervisor'].includes( userRole ) ) {
         const deliveredTypes = await Deliver.query().where( 'user_id', '=', userId );
@@ -24,7 +22,7 @@ module.exports = require( './ModelRouter' )( SeatPriceModel, '[zone, type]', asy
             typeIds.push( deliver.type_id );
         });
 
-        dbQuery.addClause( 'type_id', 'in', typeIds );
+        dbQuery.where().addClause( SeatPriceModel.listFields(SeatPriceModel,['type_id'],false)[0], 'in', typeIds );
     } 
 
     return dbQuery;

@@ -18,6 +18,17 @@ class RecintZone extends Model {
             }
         }
     };
+
+    static get columns() {
+        return [
+            'id',
+            'recint_id',
+            'zone',
+            'color',
+            'created_at',
+            'updated_at'
+        ];
+    }
 }
 
 module.exports = RecintZone;

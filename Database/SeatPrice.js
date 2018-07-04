@@ -27,6 +27,22 @@ class SeatPrice extends Model {
             }
         };
     }
+
+    static get columns() {
+        return [
+            'id',
+            'session_id',
+            'zone_id',
+            'type_id',
+            'numerated',
+            'from_row',
+            'from_seat',
+            'to_row',
+            'to_seat',
+            'created_at',
+            'updated_at'
+        ];
+    }
 }
 
 module.exports = SeatPrice;

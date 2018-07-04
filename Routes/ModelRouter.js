@@ -4,7 +4,7 @@ const ModelController = require( '../Controllers/ModelController' ).builder
 module.exports = ( model, including, queryBuilder, CustomController, passUser, passRes, passCompany, middlewares ) => {
     const Router = require( 'express' ).Router();
     const controller = CustomController ? CustomController(model) : ModelController( model );
-    queryBuilder = queryBuilder || ( async ( req ) => new DBQuery( req ) );
+    queryBuilder = queryBuilder || ( () => new DBQuery( model ) );
     including = including || '';
     middlewares = middlewares || {};
 

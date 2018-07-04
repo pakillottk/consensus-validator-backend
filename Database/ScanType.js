@@ -27,6 +27,16 @@ class ScanType extends Model {
             }
         };
     }
+
+    static get columns() {
+        return [
+            'id',
+            'group_id',
+            'type_id',
+            'created_at',
+            'updated_at'
+        ];
+    }
 }
 
 module.exports = ScanType;

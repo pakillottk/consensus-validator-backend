@@ -1,19 +1,25 @@
 const DBQuery = require( '../Database/Queries/DBQuery' );
-const QueryRecintZones = require( '../Database/Queries/RecintZones/QueryRecintZones' );
+const RecintZone = require('../Database/RecintZone');
 const ZonePolygon = require( '../Database/ZonePolygon' );
 const Session = require( '../Database/Session' );
 
 module.exports = require( './ModelRouter' )( ZonePolygon, '', async ( req ) => {
     let { recint } = req.query;
     const { session } = req.query;
-    const dbQuery = new DBQuery( req );
-    //returns data only if recint selected
+    const dbQuery = new DBQuery( ZonePolygon );
+
+    dbQuery.join(
+        RecintZone.tableName,
+        ZonePolygon.listFields(ZonePolygon,['zone_id'],false)[0],
+        RecintZone.listFields(RecintZone,['id'],false)[0]
+    );
+
     if( session ) {
         const session_recint = await Session.query().where( 'id', '=', session );
         recint = session_recint[ 0 ].recint_id;
     }
-    const zones = await QueryRecintZones( recint, true, true );
-    dbQuery.addClause( 'zone_id', 'in', zones );
-    console.log( dbQuery.clauses )
+
+    dbQuery.where().addClause( RecintZone.listFields(RecintZone,['recint_id' ],false)[0], '=', recint );
+    
     return dbQuery;
 });

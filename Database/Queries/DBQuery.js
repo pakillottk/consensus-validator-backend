@@ -1,5 +1,9 @@
-const QueryConfig = require( './QueryConfig' );
+const env = require('../../env');
+const DBQuery = require('./Engine/Drivers/DriverRegistry')[env.QUERY_DRIVER];
+module.exports = DBQuery;
 
+//const QueryConfig = require( './QueryConfig' );
+/*
 class DBQuery {
     constructor( req ) {
         this.clauses = [];
@@ -64,4 +68,4 @@ class DBQuery {
     }
 }
 
-module.exports = DBQuery;
+module.exports = DBQuery;*/

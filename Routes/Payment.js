@@ -1,12 +1,29 @@
 const PaymentModel = require( '../Database/Payment' );
+const Session = require('../Database/Session');
 const DBQuery = require( '../Database/Queries/DBQuery' );
-const QueryCompanySessions = require('../Database/Queries/Sessions/QueryCompanySessions');
 
 module.exports = require( './ModelRouter' )( PaymentModel, '[user]', async ( req ) => {
-    const dbQuery = new DBQuery( req );
+    const dbQuery = new DBQuery( PaymentModel );
     const user = req.res.locals.oauth.token.user;
     const sessionId = req.query.session;
+
+    if( sessionId ) {
+        dbQuery.where().addClause( PaymentModel.listFields(PaymentModel,['session_id'],false)[0], '=', sessionId );
+    } else { 
+        if( user.role.role === 'ticketoffice-manager' || user.role.role === 'supervisor' ) {
+            dbQuery.where().addClause( PaymentModel.listFields(PaymentModel,['user_id'],false)[0], '=', user.id );
+        } else if( user.role.role !== 'superadmin' ) {
+            dbQuery.join(
+                Session.tableName,
+                PaymentModel.listFields(PaymentModel,['session_id'],false)[0],
+                Session.listFields(Session,['id'],false)[0]
+            );
+            dbQuery.where().addClause( Session.listFields(Session,['company_id'],false)[0], '=', user.company_id );
+        }
+    }
+
     dbQuery.addAllReqParams( 
+        PaymentModel.tableName,
         req.query, 
         { 
             session: true,
@@ -22,18 +39,7 @@ module.exports = require( './ModelRouter' )( PaymentModel, '[user]', async ( req
                 max: req.query.to_date || new Date()
             }
         } 
-    ); 
-
-    if( sessionId ) {
-        dbQuery.addClause( 'session_id', '=', sessionId );
-    } else { 
-        if( user.role.role === 'ticketoffice-manager' || user.role.role === 'supervisor' ) {
-            dbQuery.addClause( 'user_id', '=', user.id );
-        } else if( user.role.role !== 'superadmin' ) {
-            const sessionIds = await QueryCompanySessions( user.company_id, true, true );
-            dbQuery.addClause( 'session_id', 'in', sessionIds );
-        }
-    }
+    );
 
     return dbQuery;
 }, null, true);

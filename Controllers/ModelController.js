@@ -57,77 +57,23 @@ class ModelController extends Controller {
             this.removeImage( oldData[ field ] );
         })
     }
-
-    applyDBQuery( query, DBQuery ) {
-        if( DBQuery ) {
-            query.where( (builder) => {
-                for( let i = 0; i < DBQuery.clauses.length; i++ ) {
-                    const clause = DBQuery.clauses[ i ];
-                    if( i === 0 ) {
-                        switch( clause.operator ) {
-                            case 'in': {
-                                builder = builder.whereIn( clause.field, clause.value );
-                                break;
-                            }
-                            case 'between': {
-                                builder = builder.whereBetween( clause.field, clause.value );
-                                break;
-                            }
-                            default:
-                                builder = builder.where( clause.field, clause.operator, clause.value );
-                        }
-                    } else {
-                        const isDefault = !['in','between'].includes( clause.operator );
-                        if( isDefault ) {
-                            if( clause.linker === 'and' ) {
-                                builder = builder.andWhere( clause.field, clause.operator, clause.field );
-                            } else {
-                                builder = builder.orWhere( clause.field, clause.operator, clause.field );
-                            }
-                        } else {
-                            if( clause.linker === 'and' ) {
-                                builder = clause.operator === 'in' ?
-                                            builder.whereIn( clause.field, clause.value ) 
-                                            : 
-                                            builder.whereBetween( clause.field, clause.value );
-                            } else {
-                                builder = clause.operator === 'in' ?
-                                            builder.orWhereIn( clause.field, clause.value ) 
-                                            : 
-                                            builder.orWhereBetween( clause.field, clause.value );
-                            }
-                        }                        
-                    }
-                }
-            })
-        }
-
-        return query
-    }
-    
+        
     async index( including, DBQuery ) {       
         try {
-            let output = this.model.query();
-            if( including ) {
-                output = output.eager( including );
-            }    
-            output = this.applyDBQuery( output, DBQuery );
-            return output;
+            including.replace(/^\[|\]$/g,'').split(',').forEach( rel => {
+                DBQuery.include( rel );
+            });
+            return await DBQuery.run();
         } catch( error ) {
             return error;
-        }
-        
+        }        
     }
 
-    get( id, including, DBQuery ) {
+    get( id, including ) {
         let output = this.model.query().findById( id );
         if( including ) {
             output = output.eager( including );
         }    
-
-        if( DBQuery ) {
-            return this.applyDBQuery( output, DBQuery );
-        }
 
         return output;
     }

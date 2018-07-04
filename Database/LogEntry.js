@@ -19,6 +19,19 @@ class LogEntry extends Model {
         }
     };
 
+    static get columns() {
+        return [
+            'id',
+            'user_id',
+            'level',
+            'msg',
+            'date',
+            'session_id',
+            'created_at',
+            'updated_at'
+        ];
+    }
+
     async $afterInsert( context ) {
         await super.$afterInsert( context );
         

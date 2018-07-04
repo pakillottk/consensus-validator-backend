@@ -1,8 +1,10 @@
 const DBQuery = require( '../Database/Queries/DBQuery' );
 const RecintModel = require( '../Database/Recint' );
 module.exports = require( './ModelRouter' )( RecintModel, '', ( req ) => {
-    const dbQuery = new DBQuery( req );
+    const dbQuery = new DBQuery( RecintModel );
+    
     dbQuery.addAllReqParams( 
+        RecintModel.tableName,
         req.query, 
         {},
         {
@@ -12,6 +14,6 @@ module.exports = require( './ModelRouter' )( RecintModel, '', ( req ) => {
         },
         {} 
     ); 
-
+    
     return dbQuery;
 });

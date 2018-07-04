@@ -29,6 +29,16 @@ class Sales extends Model {
         };
     }
 
+    static get columns() {
+        return [
+            'id',
+            'user_id',
+            'code_id',
+            'created_at',
+            'updated_at'
+        ];
+    }
+
     async $afterInsert( context ) {
         await super.$afterInsert( context );
         setTimeout( async () => {

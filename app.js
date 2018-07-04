@@ -56,6 +56,7 @@ app.post( '/logout', app.oauth.authenticate(), async ( req, res ) => {
   }
 })
 
+
 const Router = express.Router();
 app.use( '/', app.oauth.authenticate(), Router );
 

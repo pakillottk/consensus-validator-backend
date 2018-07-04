@@ -28,6 +28,20 @@ class SeatReserve extends Model {
         };
     }
 
+    static get columns() {
+        return [
+            'id',
+            'session_id',
+            'zone_id',
+            'seat_row',
+            'seat_index',
+            'user_id',
+            'expires_at',
+            'created_at',
+            'updated_at'
+        ];
+    }
+
     async $afterInsert( context ) {
         await super.$afterInsert( context );
         

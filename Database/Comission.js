@@ -27,6 +27,19 @@ class Comission extends Model {
             }
         };
     }
+
+    static get columns() {
+        return [
+            'id',
+            'session_id',
+            'user_id',
+            'distribution_cost',
+            'comission',
+            'apply_on',
+            'created_at',
+            'update_at'
+        ];
+    }
 }
 
 module.exports = Comission;

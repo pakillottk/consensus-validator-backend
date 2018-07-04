@@ -2,13 +2,15 @@ const DBQuery = require( '../Database/Queries/DBQuery' );
 const LogEntryModel = require( '../Database/LogEntry' );
 
 module.exports = require( './ModelRouter' )( LogEntryModel, '[user]', async ( req ) => {
-    const dbQuery = new DBQuery( req );
+    const dbQuery = new DBQuery( LogEntryModel );
     const sessionId = req.query.session;
     if( !sessionId ) {
         return dbQuery;
     }
-
+    dbQuery.where().addClause( LogEntryModel.listFields(LogEntryModel,['session_id'],false)[0], '=', sessionId );
+    
     dbQuery.addAllReqParams( 
+        LogEntryModel.tableName,
         req.query, 
         { session: true, from_date: true, to_date: true }, 
         {msg: true}, 
@@ -21,6 +23,5 @@ module.exports = require( './ModelRouter' )( LogEntryModel, '[user]', async ( re
         }
     );
 
-    dbQuery.addClause( 'session_id', '=', sessionId );
     return dbQuery;
 });

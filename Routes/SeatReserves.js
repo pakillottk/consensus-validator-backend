@@ -4,9 +4,9 @@ const SeatReserveController = require( '../Controllers/SeatReserveController' );
 
 module.exports = require( './ModelRouter' )( SeatReserve, '[zone, user]', async ( req ) => {
     const { session } = req.query;
-    const dbQuery = new DBQuery( req );
+    const dbQuery = new DBQuery( SeatReserve );
     //returns data only if session selected
-    dbQuery.addClause( 'session_id', '=', session ? session : -1 )
+    dbQuery.where().addClause( SeatReserve.listFields( SeatReserve,['session_id'],false )[0] , '=', session ? session : -1 )
     
     return dbQuery;
 }, SeatReserveController, false, true );

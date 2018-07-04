@@ -28,6 +28,25 @@ class Code extends Model {
         }
     };
 
+    static get columns() {
+        return [
+            'id',
+            'code',
+            'type_id',
+            'name',
+            'email',
+            'maxValidations',
+            'validations',
+            'out',
+            'zon_id',
+            'row_index',
+            'seat_index',
+            'seat_number',
+            'created_at',
+            'updated_at'
+        ]
+    }
+
     async $afterInsert( context ) {
         await super.$afterInsert( context );
         const ioController = Model.io;

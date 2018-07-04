@@ -34,6 +34,21 @@ class Session extends Model {
             header_img: true
         }
     }
+
+    static get columns() {
+        return [ 
+            'id',
+            'name',
+            'location',
+            'recint',
+            'date',
+            'sellers_locked_at',
+            'ticketoffice_closed_at', 
+            'company_id',
+            'created_at', 
+            'updated_at' 
+        ];
+    }
 }
 
 module.exports = Session;

@@ -5,7 +5,8 @@
   "scripts": {
     "start": "PORT=3005 node ./bin/www",
     "watch": "PORT=3005 nodemon ./bin/www",
-    "knex": "node node_modules/knex/bin/cli.js"
+    "knex": "node node_modules/knex/bin/cli.js",
+    "test": "mocha"
   },
   "dependencies": {
     "bcrypt": "^1.0.3",
@@ -29,6 +30,9 @@
     "socket.io": "^2.1.1"
   },
   "devDependencies": {
+    "chai": "^4.1.2",
+    "chai-http": "^4.0.0",
+    "mocha": "^5.2.0",
     "nodemon": "^1.17.5"
   }
 }
