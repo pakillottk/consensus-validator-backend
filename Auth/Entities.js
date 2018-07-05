@@ -1,0 +1,23 @@
+module.exports = [
+    'Code',
+    'Comission',
+    'Company',
+    'Deliver',
+    'LogEntry',
+    'Model',
+    'Payment',
+    'Recint',
+    'RecintZone',
+    'Role',
+    'Sales',
+    'ScanGroup',
+    'ScanType',
+    'SeatPrice',
+    'SeatReserve',
+    'SeatRow',
+    'Session',
+    'Type',
+    'User',
+    'UserScanGroup',
+    'ZonePolygon'
+]

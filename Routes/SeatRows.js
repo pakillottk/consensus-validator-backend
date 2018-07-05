@@ -12,15 +12,8 @@ module.exports = require( './ModelRouter' )( SeatRowModel, '', async ( req ) => 
     const userRole      = req.res.locals.oauth.token.user.role.role;
     const userCompany   = req.res.locals.oauth.token.user.company_id;
     
-    if( session ) {
-        let session_recint; 
-        if( userRole === 'superadmin' ) {
-            session_recint = await Session.query().where( 'id', '=', session );
-        } else {
-            session_recint = await Session.query()
-                                                .where( 'id', '=', session )
-                                                .andWhere('company_id','=',userCompany);
-        }
+    if( session ) { 
+        const session_recint = await Session.query().where( 'id', '=', session );
         recint = session_recint.length > 0 ? session_recint[ 0 ].recint_id : -1;
     }
 
