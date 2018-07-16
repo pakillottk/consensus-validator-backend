@@ -5,10 +5,6 @@ const Code = require( '../Database/Code' );
 const Type = require( '../Database/Type' );
 const Session = require('../Database/Session');
 const DBQuery = require( '../Database/Queries/DBQuery' );
-const QueryCompanySessions = require('../Database/Queries/Sessions/QueryCompanySessions');
-const QuerySessionsTypes = require('../Database/Queries/Types/QuerySessionsTypes');
-const QueryTypesCodes = require('../Database/Queries/Codes/QueryTypesCodes');
-const QueryByCode = require('../Database/Queries/Codes/QueryByCode');
 
 module.exports = require( './ModelRouter' )( SaleModel, '[user, code.[type, zone]]', async ( req ) => {
     const dbQuery = new DBQuery( SaleModel );

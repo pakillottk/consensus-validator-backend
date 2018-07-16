@@ -50,6 +50,12 @@ class QObjection extends Query {
     
         return q;
     }
+    
+    passClauses( builder, w ) {
+        w.clauses.forEach( (clause,i) => {
+            builder = this.applyClause( builder, clause.clause, clause.linker, i===0 )
+        })
+    }
 
     run() {
         let query = this.table.query();
@@ -72,28 +78,26 @@ class QObjection extends Query {
             }
             
         });
-        const passClauses = ( builder, w ) => {
-            w.clauses.forEach( (clause,i) => {
-                builder = this.applyClause( builder, clause.clause, clause.linker, i===0 )
-            })
-        }
         this.wheres.forEach( (w,i) => {
             if( i>0 ) {
                 if( w.linker.match(/and/i) ) {
                     query.andWhere( builder => {
-                        passClauses( builder, w )
+                        this.passClauses( builder, w )
                     })
                 } else if( w.linker.match(/or/i) ) {
                     query.orWhere( builder => {
-                        passClauses( builder, w )
+                        this.passClauses( builder, w )
                     })
                 }
             } else {
                 //first where
                 query.where( builder => {
-                    passClauses( builder, w )
+                    this.passClauses( builder, w )
                 })
             }
+        })
+        this.order.forEach( orderCfg => {
+            query = query.orderBy( orderCfg.field.formatted(), orderCfg.direction )
         })
 
         return query

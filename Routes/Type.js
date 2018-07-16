@@ -2,10 +2,6 @@ const DBQuery = require( '../Database/Queries/DBQuery' );
 const TypeModel = require( '../Database/Type' );
 const Deliver = require( '../Database/Deliver' );
 const Session = require( '../Database/Session' );
-const UserScanGroup = require('../Database/UserScanGroup');
-const ScanGroup = require('../Database/ScanGroup');
-const ScanType = require('../Database/ScanType');
-const QueryCompanySessions = require('../Database/Queries/Sessions/QueryCompanySessions');
 
 module.exports = require( './ModelRouter' )( TypeModel, '', async ( req ) => {
     const sessionId = req.query.session;

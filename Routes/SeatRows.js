@@ -1,5 +1,4 @@
 const DBQuery = require( '../Database/Queries/DBQuery' );
-const QueryRecintZones = require( '../Database/Queries/RecintZones/QueryRecintZones' );
 const Session = require( '../Database/Session' );
 const SeatRowModel = require( '../Database/SeatRow' );
 const RecintZone = require('../Database/RecintZone');

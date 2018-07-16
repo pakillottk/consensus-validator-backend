@@ -1,7 +1,7 @@
 module.exports = ( Entity, method ) => ( req, res, next ) => {
     const scopes = req.res.locals.oauth.token.scopes;
     let op;
-    switch (method) {
+    switch ( method ) {
         case 'put':
         case 'post':
             op = 'write';
@@ -9,7 +9,7 @@ module.exports = ( Entity, method ) => ( req, res, next ) => {
         case 'get':
             op='read';
             break;
-        case 'delete':
+        case 'remove':
             op='remove';
             break;
     }
