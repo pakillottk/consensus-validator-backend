@@ -4,7 +4,8 @@ module.exports = {
     serverOptions: { //Server config
         ssl: {      
             keyFile: '', //path to the ssl_key
-            certFile: '' //path to the ssl_cert
+            certFile: '', //path to the ssl_cert
+            chainFile: '', //path to ssl_chain (pem)
         }
     }
 }

@@ -26,6 +26,7 @@ if( env.protocol === "http" ) {
   server = https.createServer({
     key: fs.readFileSync( env.serverOptions.ssl.keyFile ),
     cert: fs.readFileSync( env.serverOptions.ssl.certFile ),
+    ca: fs.readFileSync( env.serverOptions.ssl.chainFile )
   }, app);
 }
 var io = require('socket.io')( server, {
