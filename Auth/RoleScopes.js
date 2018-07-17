@@ -67,7 +67,12 @@ let sellerScopes = addScopes(
 );
 sellerScopes = sellerScopes.concat(
     addScopes(
-        ['LogEntry','Payment','Sales','SeatReserve'], true, true, false
+        ['LogEntry','Payment','Sales'], true, true, false
+    )
+);
+sellerScopes = sellerScopes.concat(
+    addScopes(
+        ['SeatReserve'], true, true, true
     )
 );
 
