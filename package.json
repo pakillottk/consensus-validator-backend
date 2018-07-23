@@ -5,6 +5,7 @@
   "scripts": {
     "start": "PORT=3005 node ./bin/www",
     "watch": "PORT=3005 nodemon ./bin/www",
+    "debug": "PORT=3005 node --no-lazy --inspect-brk=5858 ./bin/www",
     "knex": "node node_modules/knex/bin/cli.js",
     "test": "mocha"
   },
