@@ -32,7 +32,7 @@ let supervisorScopes = [].concat.apply(
 );
 supervisorScopes = supervisorScopes.concat( 
     addScopes(
-        ['Code','Company','Role','User','Recint','RecintZone','ZonePolygon','SeatRow'], true, false, false
+        ['Code','Company','Role','User','SessionSupervisors','Recint','RecintZone','ZonePolygon','SeatRow'], true, false, false
     )
 );
 supervisorScopes = supervisorScopes.concat( ScopeMaker( 'Session', true, true, false ) );

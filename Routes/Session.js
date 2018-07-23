@@ -1,7 +1,9 @@
 const DBQuery = require('../Database/Queries/DBQuery');
 const SessionModel = require( '../Database/Session' );
+const SessionSupervisor = require( '../Database/SessionSupervisor' );
 const Type = require('../Database/Type');
 const Deliver = require('../Database/Deliver');
+
 
 module.exports = require( './ModelRouter' )( SessionModel, '[company, recint]', async ( req ) => {
     const user = req.res.locals.oauth.token.user;
@@ -25,11 +27,20 @@ module.exports = require( './ModelRouter' )( SessionModel, '[company, recint]', 
         
         const sessions = await deliverSessions.run().map( type => type.session_id);
         dbQuery.where().addClause(SessionModel.listFields(SessionModel,['id'],false)[0], 'in', sessions );
-    } else if( ['admin','supervisor'].includes( user.role.role ) ) {
+    } else if( 'admin' ===  user.role.role ) {
         //show only own sessions
         dbQuery.where().addClause(SessionModel.listFields(SessionModel,['company_id'],false)[0],'=',user.company_id);
-    }
+    } else if( 'supervisor' === user.role.role ) {
+        //show only auth sessions
+        dbQuery.join(
+            SessionSupervisor.tableName,
+            SessionModel.listFields( SessionModel,['id'], false )[0],
+            SessionSupervisor.listFields( SessionSupervisor, ['session_id'], false )[0]
+        );
 
+        dbQuery.where().addClause( SessionSupervisor.listFields(SessionSupervisor,['user_id'],false)[0],'=',user.id )
+    }
+ 
     dbQuery.addAllReqParams( 
         SessionModel.tableName,
         req.query, 

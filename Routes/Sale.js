@@ -4,6 +4,7 @@ const SaleController = require( '../Controllers/SaleController' )
 const Code = require( '../Database/Code' );
 const Type = require( '../Database/Type' );
 const Session = require('../Database/Session');
+const SessionSupervisor = require('../Database/SessionSupervisor');
 const DBQuery = require( '../Database/Queries/DBQuery' );
 
 module.exports = require( './ModelRouter' )( SaleModel, '[user, code.[type, zone]]', async ( req ) => {
@@ -22,22 +23,32 @@ module.exports = require( './ModelRouter' )( SaleModel, '[user, code.[type, zone
         Type.listFields(Type,['id'],false)[0]
     );
 
+    if( 'supervisor' === user.role.role ) {
+        dbQuery.join(
+            SessionSupervisor.tableName,
+            Type.listFields(Type,['session_id'],false)[0],
+            SessionSupervisor.listFields(SessionSupervisor,['session_id'],false)[0],
+        );
+        dbQuery.where().addClause( SessionSupervisor.listFields(SessionSupervisor,['user_id'],false)[0], '=', user.id );
+    }
+
     if( !sessionId ) {
-        if( user.company_id && user.role.role !== 'superadmin' ) {  
+        if( user.company_id && user.role.role !== 'superadmin' && user.role.role !== 'supervisor' ) {  
            dbQuery.join(
                 Session.tableName,
                 Type.listFields(Type,['session_id'],false)[0],
                 Session.listFields(Session,['id'],false)[0]
            );
            dbQuery.where().addClause( Session.listFields(Session,['company_id'],false)[0], '=', user.company_id );
-        }        
+        } 
 
         return dbQuery;
-    }   
+    } 
+
     dbQuery.where().addClause( Type.listFields(Type,['session_id'],false)[0], '=', sessionId );
     if( ['seller','ticketoffice-manager'].includes(user.role.role) ) {
         dbQuery.where().addClause( SaleModel.listFields(SaleModel,['user_id'],false)[0], '=', user.id );
-    }
+    } 
 
     dbQuery.addAllReqParams( 
         SaleModel.tableName,

@@ -6,6 +6,7 @@ module.exports = [
     'LogEntry',
     'Model',
     'Payment',
+    'SessionSupervisor',
     'Recint',
     'RecintZone',
     'Role',

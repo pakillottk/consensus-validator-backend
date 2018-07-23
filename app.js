@@ -74,6 +74,9 @@ Router.use( '/sessions', SessionRoutes );
 const TypeRoutes = require( './Routes/Type' );
 Router.use( '/types', TypeRoutes );
 
+const SessionSupervisorRoutes = require('./Routes/SessionSupervisor');
+Router.use( '/sessionsupervisors', SessionSupervisorRoutes );
+
 const RecintRoutes = require( './Routes/Recint' );
 Router.use( '/recints', RecintRoutes );
 

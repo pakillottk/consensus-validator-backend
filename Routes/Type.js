@@ -5,6 +5,7 @@ const Session = require( '../Database/Session' );
 const ScanGroup = require( '../Database/ScanGroup');
 const UserScanGroup = require( '../Database/UserScanGroup');
 const ScanType = require( '../Database/ScanType');
+const SessionSupervisor = require('../Database/SessionSupervisor');
 
 module.exports = require( './ModelRouter' )( TypeModel, '', async ( req ) => {
     const sessionId = req.query.session;
@@ -59,6 +60,13 @@ module.exports = require( './ModelRouter' )( TypeModel, '', async ( req ) => {
                     );
 
         return groupQuery;
+    } else if( 'supervisor' === userRole ) {
+        dbQuery.join(
+            SessionSupervisor.tableName,
+            TypeModel.listFields(TypeModel,['session_id'],false)[0],
+            SessionSupervisor.listFields(SessionSupervisor,['session_id'],false)[0]
+        );
+        dbQuery.where().addClause( SessionSupervisor.listFields(SessionSupervisor,['user_id'],false)[0],'=',userId );
     } else if( userCompany ) {
         dbQuery.join(
             Session.tableName,
