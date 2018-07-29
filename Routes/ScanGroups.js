@@ -3,10 +3,8 @@ const ScanGroupModel = require( '../Database/ScanGroup' );
 
 module.exports = require( './ModelRouter' )( ScanGroupModel, '[session]', async ( req ) => {
     const sessionId = req.query.session;
-    const dbQuery = new DBQuery( req );
-    dbQuery.addClause( 'session_id', '=', sessionId );
-
-    //TODO: FILTER USER GROUP AND COMPANY SESSIONS
+    const dbQuery = new DBQuery( ScanGroupModel );
+    dbQuery.where().addClause( ScanGroupModel.listFields(ScanGroupModel,['session_id'],false)[0], '=', sessionId );
 
     return dbQuery;
 }, null, false, false, false );

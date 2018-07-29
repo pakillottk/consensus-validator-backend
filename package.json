@@ -5,30 +5,35 @@
   "scripts": {
     "start": "PORT=3005 node ./bin/www",
     "watch": "PORT=3005 nodemon ./bin/www",
-    "knex": "node node_modules/knex/bin/cli.js"
+    "debug": "PORT=3005 node --no-lazy --inspect-brk=5858 ./bin/www",
+    "knex": "node node_modules/knex/bin/cli.js",
+    "test": "mocha"
   },
   "dependencies": {
     "bcrypt": "^1.0.3",
-    "body-parser": "~1.18.2",
+    "body-parser": "^1.18.3",
     "cookie-parser": "~1.4.3",
+    "cors": "^2.8.4",
     "debug": "~2.6.9",
     "express": "~4.15.5",
     "express-fileupload": "^0.4.0",
     "express-oauth-server": "^2.0.0",
+    "helmet": "^3.12.1",
     "jade": "~1.11.0",
-    "knex": "^0.14.2",
+    "knex": "^0.14.6",
     "kue": "^0.11.6",
     "morgan": "~1.9.0",
     "oauth2-server": "^3.0.0",
     "objection": "^0.9.4",
     "objection-password": "^0.2.0",
-    "pg": "^7.4.1",
+    "pg": "^7.4.3",
     "serve-favicon": "~2.4.5",
-    "cors": "^2.8.4",
-    "helmet": "^3.10.0",
-    "socket.io": "^2.0.4"
+    "socket.io": "^2.1.1"
   },
   "devDependencies": {
-    "nodemon": "^1.14.12"
+    "chai": "^4.1.2",
+    "chai-http": "^4.0.0",
+    "mocha": "^5.2.0",
+    "nodemon": "^1.17.5"
   }
 }

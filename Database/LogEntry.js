@@ -19,12 +19,25 @@ class LogEntry extends Model {
         }
     };
 
+    static get columns() {
+        return [
+            'id',
+            'user_id',
+            'level',
+            'msg',
+            'date',
+            'session_id',
+            'created_at',
+            'updated_at'
+        ];
+    }
+
     async $afterInsert( context ) {
         await super.$afterInsert( context );
         
         const sessionId = this.session_id;
 
-        const ioController = LogEntry.io;
+        const ioController = Model.io;
         ioController.emitTo( sessionId + '-session', 'log_entry_added' ,this );
     }
 }

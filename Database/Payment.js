@@ -27,6 +27,20 @@ class Payment extends Model {
             }
         };
     }
+
+    static get columns() {
+        return [
+            'id',
+            'session_id',
+            'user_id',
+            'pay_form',
+            'details',
+            'paid_to',
+            'ammount',
+            'created_at',
+            'updated_at'
+        ];
+    }
 }
 
 module.exports = Payment;

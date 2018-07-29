@@ -18,6 +18,16 @@ class ScanGroup extends Model {
             },
         };
     }
+
+    static get columns() {
+        return [
+            'id',
+            'group',
+            'session_id',
+            'created_at',
+            'updated_at'
+        ];
+    }
 }
 
 module.exports = ScanGroup;

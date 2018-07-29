@@ -48,6 +48,7 @@ class VotingRoom {
         //OPEN A VOTATION
         this.votationsToOpenQueue.process( 'open_votation_' + this.room, this.concurrencyLevel, ( job, done ) => {
             this.openVotationHandler( job, done );
+            console.time('votation_duration');
         });
 
         //PROCESS A VOTE
@@ -174,12 +175,9 @@ class VotingRoom {
         @votation: the votation where the vote is account.  
     */
     processVote( vote, votation ) {
-        const now = new Date();
-        const openedAt = new Date(votation.openedAt);
-
         console.log( 'processing vote' );       
-        console.log( 'time to process this vote: ' + Math.abs( now.getTime() - openedAt.getTime() ) );
-
+        console.log( vote );
+        console.time('vote_processing');
         //Votation ended        
         if( !this.veredicts[ this.getVotationId( votation ) ] ) {
             console.log( 'attempted to process a vote of an ended votation...' );
@@ -199,6 +197,7 @@ class VotingRoom {
         if( vote.veredict.verification === 'not_valid' || votes === this.members || votation.codeSearch ) {
             this.closeVotation( votation );
         }
+        console.timeEnd('vote_processing');
     }
 
     //Register the votation and start the voting process
@@ -208,6 +207,7 @@ class VotingRoom {
             error => {
                 if( !error ) {                
                     console.log( 'votation broadcast enqueued' );
+                    console.log( votation );
                 }
             }
         )
@@ -259,6 +259,8 @@ class VotingRoom {
         //Ends the votation
         this.votationEnders[ this.getVotationId( votation ) ]();
         delete this.votationEnders[ this.getVotationId( votation ) ];
+
+        console.timeEnd('votation_duration');
     }
 }
 

@@ -1,24 +1,25 @@
 const DBQuery = require( '../Database/Queries/DBQuery' );
 const ModelController = require( '../Controllers/ModelController' ).builder
+const CheckScope = require('../Auth/CheckScope');
 
 module.exports = ( model, including, queryBuilder, CustomController, passUser, passRes, passCompany, middlewares ) => {
     const Router = require( 'express' ).Router();
     const controller = CustomController ? CustomController(model) : ModelController( model );
-    queryBuilder = queryBuilder || ( async ( req ) => new DBQuery( req ) );
+    queryBuilder = queryBuilder || ( () => new DBQuery( model ) );
     including = including || '';
     middlewares = middlewares || {};
 
-    Router.get( '/', async ( req, res ) => {
+    Router.get( '/', CheckScope( model.name, 'get' ), async ( req, res ) => {
         const data = await controller.index( including, await queryBuilder( req ) );
         res.status(200).send( data );
     });
 
-    Router.get( '/:id', async ( req, res ) => {
+    Router.get( '/:id', CheckScope( model.name, 'get' ), async ( req, res ) => {
         const data = await controller.get( req.params.id, including, await queryBuilder( req ) );
         res.status(200).send( data );
     });
 
-    Router.post( '/' , middlewares.post || ( ( req, res, next ) => next() ), async ( req, res ) => {
+    Router.post( '/', CheckScope( model.name, 'post' ), middlewares.post || ( ( req, res, next ) => next() ), async ( req, res ) => {
         try {
             const user = req.res.locals.oauth.token.user;
             if( passUser ) {
@@ -39,7 +40,7 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
         }
     });
 
-    Router.put( '/:id', middlewares.put || ( ( req, res, next ) => next() ), async ( req, res ) => {
+    Router.put( '/:id', CheckScope( model.name, 'put' ), middlewares.put || ( ( req, res, next ) => next() ), async ( req, res ) => {
         try {
             const user = req.res.locals.oauth.token.user;
             if( passUser ) {
@@ -56,7 +57,7 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
         }
     });
 
-    Router.delete( '/:id', async( req, res ) => {
+    Router.delete( '/:id', CheckScope( model.name, 'remove' ), async( req, res ) => {
         try {
             const deleted = await controller.delete( req.params.id );
             res.status(200).send( deleted );
@@ -66,12 +67,11 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
     });
 
     //Mass delete
-    Router.post('/bulkDelete', async( req, res ) => {
+    Router.post('/bulkDelete', CheckScope( model.name, 'remove' ), async( req, res ) => {
         try {
             const deleted = await controller.bulkDelete( req.body );
             res.status(200).send( deleted );
         } catch( error ) {
-            console.log( error );
             res.status( 400 ).send( error.message );
         }
     })

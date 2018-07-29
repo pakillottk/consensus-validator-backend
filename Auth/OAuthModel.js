@@ -1,15 +1,18 @@
 const OAuthToken = require( '../Database/OAuthToken' );
 const OAuthClient = require( '../Database/OAuthClient' );
 const User = require( '../Database/User' );
+const RoleScopes = require('./RoleScopes');
 
 module.exports.getAccessToken = async ( bearerToken ) => {
     const token = await OAuthToken.query().eager('[user, user.[role, company]]').findOne({ access_token: bearerToken });
+    const scopes = RoleScopes[ token.user.role.role ];
     if( token ) {
         return {
             accessToken: token.access_token,
             client: { id: token.client_id },
             accessTokenExpiresAt: token.access_token_expires_on,
-            user: token.user
+            user: token.user,
+            scopes
         };
     }
 }

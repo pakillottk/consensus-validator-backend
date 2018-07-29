@@ -27,6 +27,10 @@ class Deliver extends Model {
             }
         };
     }
+    
+    static get columns() {
+        return ['id','user_id','ammount','type_id','created_at','updated_at']
+    }
 }
 
 module.exports = Deliver;

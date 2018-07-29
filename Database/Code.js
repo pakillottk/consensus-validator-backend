@@ -1,5 +1,6 @@
 const Model = require( './Model' );
 const Type = require( './Type' );
+const Zone = require( './RecintZone' );
 
 class Code extends Model {
     static get tableName() {
@@ -16,12 +17,39 @@ class Code extends Model {
                     to: 'Types.id'
                 }
             },
+            zone: {
+                relation: Model.BelongsToOneRelation,
+                modelClass: Zone,
+                join: {
+                    from:'Codes.zone_id',
+                    to: 'RecintZones.id'
+                }
+            }
         }
     };
 
+    static get columns() {
+        return [
+            'id',
+            'code',
+            'type_id',
+            'name',
+            'email',
+            'maxValidations',
+            'validations',
+            'out',
+            'zon_id',
+            'row_index',
+            'seat_index',
+            'seat_number',
+            'created_at',
+            'updated_at'
+        ]
+    }
+
     async $afterInsert( context ) {
         await super.$afterInsert( context );
-        const ioController = Code.io;
+        const ioController = Model.io;
         let sessionId;
         const type = await Type.query().select( 'session_id' ).where( 'id', '=', this.type_id );
         if( type.length > 0 ) {
@@ -38,7 +66,7 @@ class Code extends Model {
         const type = await Type.query().select( 'session_id' ).where( 'id', '=', this.type_id );
         const sessionId = type[0].session_id;
 
-        const ioController = Code.io;
+        const ioController = Model.io;
         ioController.emitTo( sessionId + '-session', 'code_updated' ,this );
     }
 }

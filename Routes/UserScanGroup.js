@@ -4,20 +4,14 @@ const ScanGroupModel = require('../Database/ScanGroup');
 
 module.exports = require( './ModelRouter' )( UserScanGroupModel, '[user, group]', async ( req ) => {
     const sessionId = req.query.session;
-    const dbQuery = new DBQuery( req );
+    const dbQuery = new DBQuery( UserScanGroupModel );
     if( sessionId ) {
-        const sessionGroups = await ScanGroupModel.query().select('id').where( 'session_id', '=', sessionId );
-        const groupsIds = [];
-        sessionGroups.forEach( group => {
-            groupsIds.push( group.id );
-        });
-        dbQuery.addClause( 'group_id', 'in', groupsIds );
-
-        for( let i = 0; i < dbQuery.clauses.length; i++ ) {
-            if( dbQuery.clauses[ i ].field === 'company_id' ) {
-                dbQuery.clauses.splice( i, 1);
-            }
-        }
+        dbQuery.join(
+            ScanGroupModel.tableName,
+            UserScanGroupModel.listFields(UserScanGroupModel,['group_id'],false)[0],
+            ScanGroupModel.listFields(ScanGroupModel,['id'],false)[0]
+        );
+        dbQuery.where().addClause( ScanGroupModel.listFields(ScanGroupModel,['session_id'],false)[0], '=', sessionId );
     }
 
     return dbQuery;

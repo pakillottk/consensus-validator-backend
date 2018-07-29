@@ -1,6 +1,5 @@
 const express = require('express');
 const fileUpload = require('express-fileupload');
-const path = require('path');
 const logger = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
@@ -56,6 +55,7 @@ app.post( '/logout', app.oauth.authenticate(), async ( req, res ) => {
   }
 })
 
+
 const Router = express.Router();
 app.use( '/', app.oauth.authenticate(), Router );
 
@@ -73,6 +73,27 @@ Router.use( '/sessions', SessionRoutes );
 
 const TypeRoutes = require( './Routes/Type' );
 Router.use( '/types', TypeRoutes );
+
+const SessionSupervisorRoutes = require('./Routes/SessionSupervisor');
+Router.use( '/sessionsupervisors', SessionSupervisorRoutes );
+
+const RecintRoutes = require( './Routes/Recint' );
+Router.use( '/recints', RecintRoutes );
+
+const RecintZoneRoutes = require( './Routes/RecintZone' );
+Router.use( '/recintzones', RecintZoneRoutes );
+
+const ZonePolygonsRoutes = require( './Routes/ZonePolygons' );
+Router.use( '/zonepolygons', ZonePolygonsRoutes );
+
+const SeatRowsRoutes = require( './Routes/SeatRows' );
+Router.use( '/seatrows', SeatRowsRoutes );
+
+const SeatPricesRoutes = require( './Routes/SeatPrices' );
+Router.use( '/seatprices', SeatPricesRoutes );
+
+const SeatReservesRoutes = require( './Routes/SeatReserves' );
+Router.use( '/seatreserves', SeatReservesRoutes );
 
 const CodeRoutes = require( './Routes/Code' );
 Router.use( '/codes', CodeRoutes );

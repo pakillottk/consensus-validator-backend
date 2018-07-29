@@ -57,55 +57,23 @@ class ModelController extends Controller {
             this.removeImage( oldData[ field ] );
         })
     }
-
-    applyDBQuery( query, DBQuery ) {
-        if( DBQuery ) {
-            for( let i = 0; i < DBQuery.clauses.length; i++ ) {
-                const clause = DBQuery.clauses[ i ];
-                if( clause.operator === 'in' ) {
-                    query = query.whereIn( clause.field, clause.value );
-                } else if( clause.operator === 'between' ) {
-                    query = query.whereBetween( clause.field, clause.value );
-                } else {                   
-                    if( i === 0 ) {
-                        query = query.where( clause.field, clause.operator, clause.value );
-                    } else {
-                        if( clause.linker === 'and' ) {
-                            query = query.andWhere( clause.field, clause.operator, clause.value );
-                        } else {
-                            query = query.orWhere( clause.field, clause.operator, clause.value );
-                        }
-                    }
-                }
-            }
-        }
-
-        return query;
-    }
-
+        
     async index( including, DBQuery ) {       
         try {
-            let output = this.model.query();
-            if( including ) {
-                output = output.eager( including );
-            }    
-            output = this.applyDBQuery( output, DBQuery );
-            return output;
+            including.replace(/^\[|\]$/g,'').split(',').forEach( rel => {
+                DBQuery.include( rel );
+            });
+            return await DBQuery.run();
         } catch( error ) {
             return error;
-        }
-        
+        }        
     }
 
-    get( id, including, DBQuery ) {
+    get( id, including ) {
         let output = this.model.query().findById( id );
         if( including ) {
             output = output.eager( including );
         }    
-
-        if( DBQuery ) {
-            return this.applyDBQuery( output, DBQuery );
-        }
 
         return output;
     }
@@ -143,11 +111,14 @@ class ModelController extends Controller {
     //Deletes the instance by Id
     async delete( id, trx ) {
         try {
+            const oldData = await this.model.query( trx ).findById( id );
             if( Object.keys( this.model.files ) ) {
-                const oldData = await this.model.query( trx ).findById( id );
                 this.removeOldFields( this.model.files, oldData );
             }
             const deleted = await this.model.query( trx ).deleteById( id );
+            if( this.model.$afterDelete ) {
+                await this.model.$afterDelete( oldData );
+            }
             return { deleted_at: new Date(), deleted_id: id };
         } catch( error ) {
             throw { code: error.code, message: error.detail };

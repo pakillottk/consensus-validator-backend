@@ -27,6 +27,16 @@ class UserScanGroup extends Model {
             },
         };
     }
+
+    static get columns() {
+        return [
+            'id',
+            'user_id',
+            'group_id',
+            'created_at',
+            'updated_at'
+        ];
+    }
 }
 
 module.exports = UserScanGroup;

@@ -1,61 +1,79 @@
 const DBQuery = require( '../Database/Queries/DBQuery' );
 const TypeModel = require( '../Database/Type' );
 const Deliver = require( '../Database/Deliver' );
-const UserScanGroup = require('../Database/UserScanGroup');
-const ScanGroup = require('../Database/ScanGroup');
-const ScanType = require('../Database/ScanType');
-const QueryCompanySessions = require('../Database/Queries/Sessions/QueryCompanySessions');
+const Session = require( '../Database/Session' );
+const ScanGroup = require( '../Database/ScanGroup');
+const UserScanGroup = require( '../Database/UserScanGroup');
+const ScanType = require( '../Database/ScanType');
+const SessionSupervisor = require('../Database/SessionSupervisor');
 
 module.exports = require( './ModelRouter' )( TypeModel, '', async ( req ) => {
     const sessionId = req.query.session;
-    const dbQuery = new DBQuery( req );
+    const dbQuery = new DBQuery( TypeModel );
     if( sessionId ) {
-        dbQuery.addClause( 'session_id', '=', sessionId );
+        dbQuery.where().addClause( TypeModel.listFields(TypeModel,['session_id'],false)[0], '=', sessionId );
     }
 
     const userId        = req.res.locals.oauth.token.user.id;
     const userRole      = req.res.locals.oauth.token.user.role.role;
     const userCompany   = req.res.locals.oauth.token.user.company_id;
     if( userRole !== 'superadmin' && userRole !== 'admin' && userRole !== 'supervisor' && userRole !== 'scanner' ) {
-        const deliveredTypes = await Deliver.query().where( 'user_id', '=', userId );
-        const typeIds = [];
-        deliveredTypes.forEach( deliver => {
-            typeIds.push( deliver.type_id );
-        });
-
-        dbQuery.addClause( 'id', 'in', typeIds );
+        //get types that have deliveries to user
+        const deliveries = new DBQuery( Deliver );
+        deliveries.join(
+            TypeModel.tableName,
+            Deliver.listFields(Deliver,['type_id'],false)[0],
+            TypeModel.listFields(TypeModel,['id'],false)[0]
+        );
+        deliveries.where().addClause( Deliver.listFields(Deliver,['user_id'],false)[0],'=',userId );
+        const types = await deliveries.run().map( del => del.type_id );
+        dbQuery.where().addClause( TypeModel.listFields( TypeModel, ['id'],false)[0], 'in', types );
     } else if ( userRole === 'scanner' ) {
-        //Get session groups
-        const sessionGroups = await ScanGroup.query().select('id').where( 'session_id', '=', sessionId );
-        const sessionIds = [];
-        sessionGroups.forEach( group => {
-            sessionIds.push( group.id );
-        })
-        if( sessionIds.length === 0 ) {
-            dbQuery.addClause( 'id', '=', -1);
-            return dbQuery;
-        }
-        
-        //Get user group
-        const userGroup = await UserScanGroup.query().select('group_id')
-                                .whereIn( 'group_id', sessionIds )
-                                .andWhere( 'user_id', '=', userId );
+        //get only the scanneable types
+        const groupQuery = new DBQuery( ScanGroup );
+        groupQuery.setSelect( TypeModel.listFields( TypeModel ) )
+        groupQuery.join(
+            UserScanGroup.tableName,
+            ScanGroup.listFields( ScanGroup,['id'],false )[0],
+            UserScanGroup.listFields( UserScanGroup,['group_id'],false )[0]
+        );
+        groupQuery.join(
+            ScanType.tableName,
+            ScanGroup.listFields( ScanGroup,['id'],false )[0],
+            ScanType.listFields( ScanType,['group_id'],false )[0]
+        );
+        groupQuery.join(
+            TypeModel.tableName,
+            ScanType.listFields( ScanType,['type_id'],false )[0],
+            TypeModel.listFields( TypeModel,['id'],false )[0]
+        );
+        groupQuery.where()
+                    .addClause( 
+                        UserScanGroup.listFields( UserScanGroup,['user_id'],false )[0],
+                        '=',
+                        userId
+                    )
+                    .addClause(
+                        ScanGroup.listFields( ScanGroup,['session_id'],false )[0],
+                        '=',
+                        sessionId
+                    );
 
-        if( userGroup.length === 0 ) {
-            dbQuery.addClause( 'id', '=', -1);
-            return dbQuery;
-        }
-        //Get types in group
-        const availableTypes = await ScanType.query().select('type_id').where( 'group_id', '=', userGroup[0].group_id );
-        const typesIds = [];    
-        availableTypes.forEach( type => {
-            typesIds.push( type.type_id );
-        });
-        //query only types in group
-        dbQuery.addClause( 'id', 'in', typesIds );
+        return groupQuery;
+    } else if( 'supervisor' === userRole ) {
+        dbQuery.join(
+            SessionSupervisor.tableName,
+            TypeModel.listFields(TypeModel,['session_id'],false)[0],
+            SessionSupervisor.listFields(SessionSupervisor,['session_id'],false)[0]
+        );
+        dbQuery.where().addClause( SessionSupervisor.listFields(SessionSupervisor,['user_id'],false)[0],'=',userId );
     } else if( userCompany ) {
-        const sessionsIds = await QueryCompanySessions( userCompany, true, true );
-        dbQuery.addClause( 'session_id', 'in', sessionsIds );
+        dbQuery.join(
+            Session.tableName,
+            TypeModel.listFields(TypeModel,['session_id'],false)[0],
+            Session.listFields(Session,['id'],false)[0]
+        );
+        dbQuery.where().addClause( Session.listFields(Session,['company_id'],false)[0], '=', userCompany );
     }
 
     return dbQuery;

@@ -1,0 +1,62 @@
+const Model = require( './Model' );
+const Zone = require('./RecintZone');
+const User = require( './User' );
+
+class SeatReserve extends Model {
+    static get tableName() {
+        return 'SeatReserves';
+    }
+
+    static get relationMappings() {
+        return {
+            zone: {
+                relation: Model.BelongsToOneRelation,
+                modelClass: Zone,
+                join: {
+                    from:'SeatReserves.zone_id',
+                    to: 'RecintZones.id'
+                }
+            },
+            user: {
+                relation: Model.BelongsToOneRelation,
+                modelClass: User,
+                join: {
+                    from: 'SeatReserves.user_id',
+                    to: 'Users.id'
+                }
+            }
+        };
+    }
+
+    static get columns() {
+        return [
+            'id',
+            'session_id',
+            'zone_id',
+            'seat_row',
+            'seat_index',
+            'user_id',
+            'expires_at',
+            'created_at',
+            'updated_at'
+        ];
+    }
+
+    async $afterInsert( context ) {
+        await super.$afterInsert( context );
+        
+        Model.io.emitTo( this.session_id + '-session', 'seatreserve_created', this );
+    }
+
+    async $afterUpdate( context ) {
+        await super.$afterUpdate( context );
+        
+        Model.io.emitTo( this.session_id + '-session', 'seatreserve_updated', this );
+    }
+
+    static async $afterDelete( deleted ) {
+        Model.io.emitTo( deleted.session_id + '-session', 'seatreserve_deleted', deleted );
+    }
+}
+
+module.exports = SeatReserve;

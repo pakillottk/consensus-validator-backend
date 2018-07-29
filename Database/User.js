@@ -28,6 +28,10 @@ class User extends Password()( Model ) {
             }
         }
     };
+
+    static get columns() {
+        return ['id','username','password','role_id','company_id', 'created_at', 'updated_at']
+    }
 }
 
 module.exports = User;

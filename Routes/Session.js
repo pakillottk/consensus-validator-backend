@@ -1,12 +1,48 @@
 const DBQuery = require('../Database/Queries/DBQuery');
 const SessionModel = require( '../Database/Session' );
-const QueryUserDelivers = require('../Database/Queries/Delivers/QueryUserDelivers');
+const SessionSupervisor = require( '../Database/SessionSupervisor' );
 const Type = require('../Database/Type');
+const Deliver = require('../Database/Deliver');
 
-module.exports = require( './ModelRouter' )( SessionModel, '[company]', async ( req ) => {
+
+module.exports = require( './ModelRouter' )( SessionModel, '[company, recint]', async ( req ) => {
     const user = req.res.locals.oauth.token.user;
-    const dbQuery = new DBQuery( req );
+    const dbQuery = new DBQuery( SessionModel );
+    
+    //Show only sessions with delivered tickets
+    if( [ 'seller', 'ticketoffice-manager' ].includes( user.role.role ) ) {
+        const deliverSessions = new DBQuery( Deliver );
+        deliverSessions.join(
+            Type.tableName, 
+            Deliver.listFields( Deliver,'type_id', false )[0],
+            Type.listFields( Type,'id',false )[0] 
+        );
+        deliverSessions.join(
+            SessionModel.tableName,
+            Type.listFields( Type,['session_id'],false )[0],
+            SessionModel.listFields(SessionModel,['id'],false)[0]
+        );
+        deliverSessions.setSelect( Type.listFields(Type,['session_id'],false) );
+        deliverSessions.where().addClause( Deliver.listFields(Deliver, ['user_id'],false)[0], '=', user.id );
+        
+        const sessions = await deliverSessions.run().map( type => type.session_id);
+        dbQuery.where().addClause(SessionModel.listFields(SessionModel,['id'],false)[0], 'in', sessions );
+    } else if( 'admin' ===  user.role.role ) {
+        //show only own sessions
+        dbQuery.where().addClause(SessionModel.listFields(SessionModel,['company_id'],false)[0],'=',user.company_id);
+    } else if( 'supervisor' === user.role.role ) {
+        //show only auth sessions
+        dbQuery.join(
+            SessionSupervisor.tableName,
+            SessionModel.listFields( SessionModel,['id'], false )[0],
+            SessionSupervisor.listFields( SessionSupervisor, ['session_id'], false )[0]
+        );
+
+        dbQuery.where().addClause( SessionSupervisor.listFields(SessionSupervisor,['user_id'],false)[0],'=',user.id )
+    }
+ 
     dbQuery.addAllReqParams( 
+        SessionModel.tableName,
         req.query, 
         { to_date: true }, 
         { name: true, recint: true, location: true },
@@ -18,17 +54,6 @@ module.exports = require( './ModelRouter' )( SessionModel, '[company]', async ( 
             }
         }  
     );
-
-    //Show only sessions with delivered tickets
-    if( [ 'seller', 'ticketoffice-manager' ].includes( user.role.role ) ) {
-        const typeIds = await QueryUserDelivers( user.id, true, false, 'type_id' );
-        const types = await Type.query().whereIn('id', typeIds);
-        const typesDeliveredSessionId = [];
-        types.forEach( type => {
-            typesDeliveredSessionId.push( type.session_id );
-        });
-        dbQuery.addClause( 'id', 'in', typesDeliveredSessionId );
-    }
 
     return dbQuery;    
 }, null, false, false, true );
