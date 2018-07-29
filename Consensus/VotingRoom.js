@@ -175,11 +175,8 @@ class VotingRoom {
         @votation: the votation where the vote is account.  
     */
     processVote( vote, votation ) {
-        const now = new Date();
-        const openedAt = new Date(votation.openedAt);
-
         console.log( 'processing vote' );       
-        console.log( 'time to process this vote: ' + Math.abs( now.getTime() - openedAt.getTime() ) );
+        console.log( vote );
         console.time('vote_processing');
         //Votation ended        
         if( !this.veredicts[ this.getVotationId( votation ) ] ) {
@@ -210,6 +207,7 @@ class VotingRoom {
             error => {
                 if( !error ) {                
                     console.log( 'votation broadcast enqueued' );
+                    console.log( votation );
                 }
             }
         )
