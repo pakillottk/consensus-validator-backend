@@ -23,6 +23,24 @@ module.exports = require( './ModelRouter' )( SaleModel, '[user, code.[type, zone
         Type.listFields(Type,['id'],false)[0]
     );
 
+    dbQuery.addAllReqParams( 
+        SaleModel.tableName,
+        req.query, 
+        { 
+            session: true,
+            to_sale_date: true,
+            code: true
+        },
+        {},
+        {
+            from_sale_date: {
+                field: 'created_at',
+                min: req.query.from_sale_date,
+                max: req.query.to_sale_date || new Date()
+            }
+        } 
+    );
+
     if( 'supervisor' === user.role.role ) {
         dbQuery.join(
             SessionSupervisor.tableName,
@@ -48,25 +66,7 @@ module.exports = require( './ModelRouter' )( SaleModel, '[user, code.[type, zone
     dbQuery.where().addClause( Type.listFields(Type,['session_id'],false)[0], '=', sessionId );
     if( ['seller','ticketoffice-manager'].includes(user.role.role) ) {
         dbQuery.where().addClause( SaleModel.listFields(SaleModel,['user_id'],false)[0], '=', user.id );
-    } 
-
-    dbQuery.addAllReqParams( 
-        SaleModel.tableName,
-        req.query, 
-        { 
-            session: true,
-            to_sale_date: true,
-            code: true
-        },
-        {},
-        {
-            from_sale_date: {
-                field: 'created_at',
-                min: req.query.from_sale_date,
-                max: req.query.to_sale_date || new Date()
-            }
-        } 
-    );
+    }     
 
     return dbQuery;
 }, SaleController, true, true );
