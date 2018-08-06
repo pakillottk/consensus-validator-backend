@@ -50,6 +50,10 @@ module.exports = require( './ModelRouter' )( SaleModel, '[user, code.[type, zone
         dbQuery.where().addClause( SessionSupervisor.listFields(SessionSupervisor,['user_id'],false)[0], '=', user.id );
     }
 
+    if( ['seller','ticketoffice-manager'].includes(user.role.role) ) {
+        dbQuery.where().addClause( SaleModel.listFields(SaleModel,['user_id'],false)[0], '=', user.id );
+    }     
+    
     if( !sessionId ) {
         if( user.company_id && user.role.role !== 'superadmin' && user.role.role !== 'supervisor' ) {  
            dbQuery.join(
@@ -64,9 +68,6 @@ module.exports = require( './ModelRouter' )( SaleModel, '[user, code.[type, zone
     } 
 
     dbQuery.where().addClause( Type.listFields(Type,['session_id'],false)[0], '=', sessionId );
-    if( ['seller','ticketoffice-manager'].includes(user.role.role) ) {
-        dbQuery.where().addClause( SaleModel.listFields(SaleModel,['user_id'],false)[0], '=', user.id );
-    }     
 
     return dbQuery;
 }, SaleController, true, true );

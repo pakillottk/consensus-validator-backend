@@ -14,8 +14,8 @@ module.exports = require( './ModelRouter' )( SessionModel, '[company, recint]', 
         const deliverSessions = new DBQuery( Deliver );
         deliverSessions.join(
             Type.tableName, 
-            Deliver.listFields( Deliver,'type_id', false )[0],
-            Type.listFields( Type,'id',false )[0] 
+            Deliver.listFields( Deliver,['type_id'], false )[0],
+            Type.listFields( Type,['id'],false )[0] 
         );
         deliverSessions.join(
             SessionModel.tableName,
