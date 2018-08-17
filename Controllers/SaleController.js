@@ -69,6 +69,60 @@ class SaleController extends ModelController {
         return soldByMe;
     }
 
+    getHashCode( userId, typeId ) {
+        const hashData = userId + "" + typeId + "" + new Date().toString() + "" + new Date().getTime(); 
+        const hashCode = crypto.createHash('md5').update(hashData).digest("hex");
+        return 'CNS' + hashCode.substr(0, 9)
+    }
+
+    async generateCode( data, trx, zoned=false ) {
+        const code = data.code?data.code:this.getHashCode( data.user_id, data.type_id )
+        if( zoned ) {
+            return Code.query( trx ).insert({
+                code: code,
+                name: data.name,
+                type_id: data.type_id,
+                email: data.email,
+                validations: 0,
+                maxValidations: 1,
+                out: true,
+                zone_id: data.zone_id,
+                row_index: data.row_index,
+                seat_index: data.seat_index,
+                seat_number: data.seat_number,
+                created_at: new Date(),
+                updated_at: new Date()
+            });
+        } else {
+            return Code.query( trx ).insert({
+                code: code,
+                name: data.name,
+                type_id: data.type_id,
+                email: data.email,
+                zone_id: data.zone_id,
+                validations: 0,
+                maxValidations: 1,
+                out: true,
+                created_at: new Date(),
+                updated_at: new Date()
+            });
+        }
+    }
+
+    /*
+        TODO!
+    */
+   async codeFromPool( data, trx, zoned=false ) {
+        //Get the code from the pool
+        //const code = 
+        //Check if empty, no pooled codes
+        //if empty
+        return null 
+        //Remove code from pool
+        //Generate the code and return
+        //return this.generateCode( {...data, code:code }, trx, zoned )
+   } 
+
     async createSaleByTypes( id, data, including, query, user, done ) { 
         const res = this.jobsResponses[ id ];
         if( !res ) {
@@ -92,7 +146,7 @@ class SaleController extends ModelController {
             if( parseInt(soldByMe) < parseInt(authSales) ) {
                 trx = await transaction.start( this.model.knex() );
 
-                const hashData = data.user_id + "" + data.type_id + "" + new Date().toString() + "" + new Date().getTime(); 
+                /*const hashData = data.user_id + "" + data.type_id + "" + new Date().toString() + "" + new Date().getTime(); 
                 const hashCode = crypto.createHash('md5').update(hashData).digest("hex");
                 const newCode = await Code.query( trx ).insert({
                     code: 'CNS' + hashCode.substr(0, 9),
@@ -105,7 +159,8 @@ class SaleController extends ModelController {
                     out: true,
                     created_at: new Date(),
                     updated_at: new Date()
-                });
+                });*/
+                const newCode = await this.generateCode( data, trx );
                 const sale = await this.model.query( trx ).eager( including ).insert({
                     user_id: data.user_id,
                     code_id: newCode.id,
@@ -212,7 +267,7 @@ class SaleController extends ModelController {
 
             //Create code and sale
             trx = await transaction.start( this.model.knex() );
-            const hashData = data.user_id + "" + data.type_id + "" + new Date().toString() + "" + new Date().getTime(); 
+            /*const hashData = data.user_id + "" + data.type_id + "" + new Date().toString() + "" + new Date().getTime(); 
             const hashCode = crypto.createHash('md5').update(hashData).digest("hex");
             const newCode = await Code.query( trx ).insert({
                 code: 'CNS' + hashCode.substr(0, 9),
@@ -228,7 +283,8 @@ class SaleController extends ModelController {
                 seat_number: data.seat_number,
                 created_at: new Date(),
                 updated_at: new Date()
-            });
+            });*/
+            const newCode = await this.generateCode( data, trx, true );
             const sale = await this.model.query( trx ).eager( including ).insert({
                 user_id: user.id,
                 code_id: newCode.id,

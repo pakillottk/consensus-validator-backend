@@ -9,14 +9,16 @@ module.exports = require( './ModelRouter' )(
         const user = req.res.locals.oauth.token.user;
         const dbQuery = new DBQuery( CompanyModel );
         if( ['admin','supervisor'].includes( user.role.role ) ) {
-            dbQuery.where().addClause( CompanyModel.listFields(CompanyModel, 'role', false), '=', user.company_id );
+            dbQuery.where().addClause( CompanyModel.listFields(CompanyModel, ['id'], false)[0], '=', user.company_id );
         }
-        dbQuery.addAllReqParams( 
-            CompanyModel.tableName,
-            req.query, 
-            {}, 
-            { name: true, nif: true, address: true, phone: true, email: true }
-        );
+        if( Object.keys(req.query).length > 0 ) {
+            dbQuery.addAllReqParams( 
+                CompanyModel.tableName,
+                req.query, 
+                {}, 
+                { name: true, nif: true, address: true, phone: true, email: true }
+            );
+        }
         return dbQuery;    
     },
     CompanyController,

@@ -56,7 +56,7 @@ class Code extends Model {
             sessionId = type[0].session_id;
         }
         if( sessionId ) {
-            ioController.emitTo( sessionId + '-session', 'code_added' ,this );        
+            ioController.emitTo( sessionId + '-session', 'code_added', this );        
         }
     }
 
