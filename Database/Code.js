@@ -1,6 +1,7 @@
 const Model = require( './Model' );
 const Type = require( './Type' );
 const Zone = require( './RecintZone' );
+const crypto = require( 'crypto' );
 
 class Code extends Model {
     static get tableName() {
@@ -38,13 +39,19 @@ class Code extends Model {
             'maxValidations',
             'validations',
             'out',
-            'zon_id',
+            'zone_id',
             'row_index',
             'seat_index',
             'seat_number',
             'created_at',
             'updated_at'
         ]
+    }
+
+    static generateCode( userId, typeId ) {
+        const hashData = userId + "" + Math.round(Math.random()*5000) + "" + typeId + "" + new Date().toString() + "" + new Date().getTime(); 
+        const hashCode = crypto.createHash('sha256').update(hashData).digest("hex");
+        return 'CNS'+hashCode.substr(0,9)
     }
 
     async $afterInsert( context ) {

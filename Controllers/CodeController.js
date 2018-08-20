@@ -1,6 +1,7 @@
 const ModelController = require('./ModelController').class
+const Code = require('../Database/Code')
 const Type = require( '../Database/Type' )
-const { transaction } = require( 'objection' );
+const { transaction } = require( 'objection' )
 
 class CodeController extends ModelController {
     constructor( model ) {
@@ -8,28 +9,62 @@ class CodeController extends ModelController {
 
         this.createdTypes = {};
     }
+
+    //Generates ammount orphan codes of typeId.
+    async generateCodes( ammount, typeId, sessionId, including ) {
+        let trx
+        try {
+            trx = await transaction.start( this.model.knex() )
+            const codes = []
+            for(let i=0;i<ammount;i++) {
+                const code = await this.createCode(
+                    {
+                        code: Code.generateCode( Math.round(Math.random()*1432), typeId ), 
+                        type_id: typeId
+                    },
+                    including, 
+                    { session:sessionId }, 
+                    trx 
+                )
+                codes.push(code)
+            }
+            await trx.commit()
+
+            return codes
+        } catch( e ) {
+            if( trx ) {
+                await trx.rollback()
+            }
+            throw e
+        }
+    }
+
+    async findOrCreateCodeType( typeLabel, sessionId, trx ) {
+        const typeAssigned = await Type.query().where( 'type', '=', typeLabel ).andWhere( 'session_id', '=', sessionId );
+        let type = this.createdTypes[ data.type ]; //cached?
+        if( !type ) { //Not cached
+            if( typeAssigned.length === 0 ) {                
+                //CREATE THE TYPE
+                type = await Type.query( trx ).insert({
+                    type: type, 
+                    price: 0, 
+                    ammount: 0, 
+                    session_id: sessionId,
+                    created_at: new Date(),
+                    updated_at: new Date()
+                });
+                this.createdTypes[ data.type ] = type;
+            } else {
+                type = typeAssigned[ 0 ]
+            }
+        }
+
+        return type
+    }
+
     async createCode( data, including, query, trx ) {   
         const sessionId = query.session;
         try {
-            const typeAssigned = await Type.query().where( 'type', '=', data.type ).andWhere( 'session_id', '=', sessionId );
-            let type = this.createdTypes[ data.type ]; //cached?
-            if( !type ) { //Not cached
-                if( typeAssigned.length === 0 ) {                
-                    //CREATE THE TYPE
-                    type = await Type.query( trx ).insert({
-                        type: data.type, 
-                        price: 0, 
-                        ammount: 0, 
-                        session_id: sessionId,
-                        created_at: new Date(),
-                        updated_at: new Date()
-                    });
-                    this.createdTypes[ data.type ] = type;
-                } else {
-                    type = typeAssigned[ 0 ]
-                }
-            }
-
             if( data.validations === undefined || data.validations === null || data.validations === "") {
                 data.validations = 0
             }
@@ -42,7 +77,7 @@ class CodeController extends ModelController {
 
             const code = await this.model.query( trx ).eager( including ).insert({
                 ...data, 
-                type_id: type.id, 
+                type_id: data.type_id?data.type_id:await this.findOrCreateCodeType(data.type, sessionId, trx).id, 
                 created_at: new Date(),
                 updated_at: new Date()
             });            
@@ -52,6 +87,7 @@ class CodeController extends ModelController {
             throw error;
         }
     }
+
     async create( data, including, query ) {   
         let trx; let response;         
         if( data.codes ) {

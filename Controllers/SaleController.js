@@ -7,7 +7,6 @@ const Type = require( '../Database/Type' );
 const Code = require( '../Database/Code' );
 const LogEntry = require('../Database/LogEntry');
 const kue = require( 'kue' );
-const crypto = require( 'crypto' );
 const { transaction } = require( 'objection' );
 
 class SaleController extends ModelController {
@@ -70,9 +69,7 @@ class SaleController extends ModelController {
     }
 
     getHashCode( userId, typeId ) {
-        const hashData = userId + "" + typeId + "" + new Date().toString() + "" + new Date().getTime(); 
-        const hashCode = crypto.createHash('md5').update(hashData).digest("hex");
-        return 'CNS' + hashCode.substr(0, 9)
+        return Code.generateCode( userId, typeId )
     }
 
     async generateCode( data, trx, zoned=false ) {
@@ -109,18 +106,26 @@ class SaleController extends ModelController {
         }
     }
 
-    /*
-        TODO!
-    */
    async codeFromPool( data, trx, zoned=false ) {
-        //Get the code from the pool
-        //const code = 
-        //Check if empty, no pooled codes
-        //if empty
-        return null 
-        //Remove code from pool
-        //Generate the code and return
-        //return this.generateCode( {...data, code:code }, trx, zoned )
+        //find all sales of current type
+        const codesSold = await this.model.query().innerJoin( 
+            Code.tableName, 
+            this.model.tableName+".code_id", 
+            Code.tableName+".id" 
+        ).where( Code.tableName+'.type_id', '=', data.type_id )
+        .map( sale => sale.code_id )
+
+        //find an orphan code of the given type
+        const orpans = await Code.query().where( 'type_id','=', data.type_id ).whereNotIn( 'id', codesSold )
+        //if no orphans return null
+        if( orpans.length === 0 ) {
+            return null 
+        }
+        //update the code with sale data
+        let target = orphans[0]
+        target = await Code.query( trx ).patchAndFetchById( target.id, {...data, updated_at: new Date()} )
+        //return the updated code
+        return target
    } 
 
     async createSaleByTypes( id, data, including, query, user, done ) { 
@@ -145,22 +150,11 @@ class SaleController extends ModelController {
             //If still under 
             if( parseInt(soldByMe) < parseInt(authSales) ) {
                 trx = await transaction.start( this.model.knex() );
-
-                /*const hashData = data.user_id + "" + data.type_id + "" + new Date().toString() + "" + new Date().getTime(); 
-                const hashCode = crypto.createHash('md5').update(hashData).digest("hex");
-                const newCode = await Code.query( trx ).insert({
-                    code: 'CNS' + hashCode.substr(0, 9),
-                    name: data.name,
-                    type_id: data.type_id,
-                    email: data.email,
-                    zone_id: data.zone_id,
-                    validations: 0,
-                    maxValidations: 1,
-                    out: true,
-                    created_at: new Date(),
-                    updated_at: new Date()
-                });*/
-                const newCode = await this.generateCode( data, trx );
+                //try to get an orphan code of given type, else create a new one
+                let newCode = await this.codeFromPool( data, trx )
+                if( !newCode ) {
+                    newCode = await this.generateCode( data, trx );
+                }
                 const sale = await this.model.query( trx ).eager( including ).insert({
                     user_id: data.user_id,
                     code_id: newCode.id,

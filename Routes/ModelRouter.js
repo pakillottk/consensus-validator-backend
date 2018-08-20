@@ -75,6 +75,7 @@ module.exports = ( model, including, queryBuilder, CustomController, passUser, p
             res.status( 400 ).send( error.message );
         }
     })
-
+    
+    Router.controller = controller
     return Router;
 }
