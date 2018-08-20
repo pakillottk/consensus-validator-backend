@@ -30,12 +30,12 @@ const Router = require( './ModelRouter' )( CodeModel, INCLUDING, async ( req ) =
 }, CodeController);
 
 Router.post('/generate/:ammount', CheckScope( CodeModel.name, 'post' ), async ( req, res ) => {
-    const ammount = req.params.ammount
+    const ammount = parseInt(req.params.ammount,10)
     if( !ammount || ammount < 0 ) {
         res.status( 400 ).send("Ammount must be > 0");
     } else {
         try {
-            const codes = await Router.controller.generateCodes( req.params.ammount, req.body.type_id, req.body.session_id, INCLUDING )
+            const codes = await Router.controller.generateCodes( ammount, req.body.type_id, req.body.session_id, INCLUDING )
             res.status(200).send( JSON.stringify( codes ) )
         } catch( e ) {
             res.status(400).send( e )

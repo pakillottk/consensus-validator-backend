@@ -106,24 +106,27 @@ class SaleController extends ModelController {
         }
     }
 
-   async codeFromPool( data, trx, zoned=false ) {
+   async codeFromPool( data, trx ) {
         //find all sales of current type
-        const codesSold = await this.model.query().innerJoin( 
-            Code.tableName, 
-            this.model.tableName+".code_id", 
-            Code.tableName+".id" 
-        ).where( Code.tableName+'.type_id', '=', data.type_id )
-        .map( sale => sale.code_id )
+        const codesSold = await this.model.query()
+                                            .innerJoin( 
+                                                Code.tableName, 
+                                                this.model.tableName+".code_id", 
+                                                Code.tableName+".id" 
+                                            )
+                                            .where( Code.tableName+'.type_id', '=', data.type_id )
+                                            .map( sale => sale.code_id )
 
         //find an orphan code of the given type
-        const orpans = await Code.query().where( 'type_id','=', data.type_id ).whereNotIn( 'id', codesSold )
+        const orphans = await Code.query().where( 'type_id','=', data.type_id ).whereNotIn( 'id', codesSold )
         //if no orphans return null
-        if( orpans.length === 0 ) {
+        if( orphans.length === 0 ) {
             return null 
         }
         //update the code with sale data
         let target = orphans[0]
-        target = await Code.query( trx ).patchAndFetchById( target.id, {...data, updated_at: new Date()} )
+        const { name, email } = data
+        target = await Code.query( trx ).patchAndFetchById( target.id, {name, email, updated_at: new Date()} )
         //return the updated code
         return target
    } 
@@ -261,23 +264,7 @@ class SaleController extends ModelController {
 
             //Create code and sale
             trx = await transaction.start( this.model.knex() );
-            /*const hashData = data.user_id + "" + data.type_id + "" + new Date().toString() + "" + new Date().getTime(); 
-            const hashCode = crypto.createHash('md5').update(hashData).digest("hex");
-            const newCode = await Code.query( trx ).insert({
-                code: 'CNS' + hashCode.substr(0, 9),
-                name: data.name,
-                type_id: data.type_id,
-                email: data.email,
-                validations: 0,
-                maxValidations: 1,
-                out: true,
-                zone_id: data.zone_id,
-                row_index: data.row_index,
-                seat_index: data.seat_index,
-                seat_number: data.seat_number,
-                created_at: new Date(),
-                updated_at: new Date()
-            });*/
+
             const newCode = await this.generateCode( data, trx, true );
             const sale = await this.model.query( trx ).eager( including ).insert({
                 user_id: user.id,
