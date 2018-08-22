@@ -49,6 +49,7 @@ class VotingRoom {
         this.votationsToOpenQueue.process( 'open_votation_' + this.room, this.concurrencyLevel, ( job, done ) => {
             this.openVotationHandler( job, done );
             console.time('votation_duration');
+            done();
         });
 
         //PROCESS A VOTE
