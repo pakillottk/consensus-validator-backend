@@ -26,7 +26,7 @@ class VotingRoom {
         
         //Time to wait until force the votation ending, when votes stop coming
         //(avoid high latency and deal with absent votations)
-        this.votationTTL = 1000;
+        this.votationTTL = 200;
         //Stores the the job responsible for killing a votation
         this.votationKillers = {};
         //Stores the done callback of the open_votation kue job.
@@ -236,8 +236,8 @@ class VotingRoom {
         //ms between when votation opened and closing.
         const elapsed = Math.abs( (new Date()).getTime() - (new Date(votation.openedAt)).getTime() );
 
-        //If valid, updates the DB
-        if( veredict.verification === 'valid' ) {
+        //updates the DB if votation is not a codeSearch votation
+        if( !votation.codeSearch )  {
             CodeController.update( veredict.consensus.id, veredict.consensus );
         }
 

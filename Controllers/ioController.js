@@ -34,7 +34,7 @@ module.exports = ( io ) => {
             });
         }
     );
-
+    
     io.on( 'connect', ( socket ) => {
         socket.on( 'join', ( data ) => {
             socket.join( data.room );
