@@ -34,6 +34,7 @@ class Sales extends Model {
             'id',
             'user_id',
             'code_id',
+            'refund',
             'created_at',
             'updated_at'
         ];

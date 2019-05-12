@@ -14,4 +14,12 @@ Model.listFields = ( model, filter=[], exclude=true ) => {
             .filter( column => { if(filter.includes( column )){ return !exclude } return exclude } )
             .map( column => new Field( model.tableName, column ));
 }
+Model.getField = ( model, field ) => {
+    if(model.columns.includes(field))
+    {
+        return new Field(model.tableName, field)
+    }
+
+    return null
+}
 module.exports = Model;
