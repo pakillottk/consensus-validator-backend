@@ -1,6 +1,13 @@
 const Query = require('../Query');
 
 class QObjection extends Query {
+    setEagerIncludes(including)
+    {
+        including.replace(/^\[|\]$/g,'').split(',').forEach( rel => {
+            this.include( rel );
+        });
+    }
+
     applyClause( q, clause, linker, first=false ) {
         if( first ) {
             switch( clause.op ) {
@@ -10,6 +17,14 @@ class QObjection extends Query {
                 }
                 case 'btw': {
                     q = q.whereBetween( clause.field.formatted(), clause.value );
+                    break;
+                }
+                case 'is': {
+                    q = q.whereNull( clause.field.formatted() );
+                    break;
+                }
+                case 'is not': {
+                    q = q.whereNotNull( clause.field.formatted() );
                     break;
                 }
                 default: {
@@ -27,6 +42,14 @@ class QObjection extends Query {
                         q = q.whereBetween( clause.field.formatted(), clause.value );
                         break;
                     }
+                    case 'is': {
+                        q = q.whereNull( clause.field.formatted() );
+                        break;
+                    }
+                    case 'is not': {
+                        q = q.whereNotNull( clause.field.formatted() );
+                        break;
+                    }
                     default: {
                         q = q.andWhere( clause.field.formatted(), clause.op, clause.value );
                     }
@@ -39,6 +62,14 @@ class QObjection extends Query {
                     }
                     case 'btw': {
                         q = q.orWhereBetween( clause.field.formatted(), clause.value );
+                        break;
+                    }
+                    case 'is': {
+                        q = q.orWhereNull( clause.field.formatted() );
+                        break;
+                    }
+                    case 'is not': {
+                        q = q.orWhereNotNull( clause.field.formatted() );
                         break;
                     }
                     default: {
@@ -59,8 +90,15 @@ class QObjection extends Query {
 
     run() {
         let query = this.table.query();
+        //run eager loads
         query = query.eager( '[' + this.includes.join(',') + ']' );
+        //run aggregations
+        this.aggregate.forEach( aggregation => {
+            query = query[aggregation.aggregator]( aggregation.field.formatted() );
+        })
+        //run selects
         query = query.select( this.select.formatFields() );
+        //run joins
         this.joins.forEach( j => {
             switch( j.type ) {
                 case 'inner': {
@@ -78,6 +116,7 @@ class QObjection extends Query {
             }
             
         });
+        //run wheres
         this.wheres.forEach( (w,i) => {
             if( i>0 ) {
                 if( w.linker.match(/and/i) ) {
@@ -96,6 +135,11 @@ class QObjection extends Query {
                 })
             }
         })
+        //run groupBy
+        this.groups.forEach( field => {
+            query = query.groupBy( field.formatted() );
+        })
+        //run orderBy
         this.order.forEach( orderCfg => {
             query = query.orderBy( orderCfg.field.formatted(), orderCfg.direction )
         })
