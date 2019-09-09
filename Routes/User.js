@@ -26,5 +26,6 @@ module.exports = require( './ModelRouter' )( UserModel, '[role, company]', async
         dbQuery.where().addClause( UserModel.listFields(UserModel,['id'],false)[0], '=', user.id );
     }
     dbQuery.addAllReqParams( UserModel.tableName, req.query, {}, { username: true } );
+    dbQuery.orderBy(UserModel.getField(UserModel, "username"), "asc");
     return dbQuery;    
 }, null, false, false, true );

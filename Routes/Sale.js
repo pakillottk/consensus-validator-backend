@@ -29,7 +29,8 @@ module.exports = require( './ModelRouter' )( SaleModel, '[user, code.[type, zone
         { 
             session: true,
             to_sale_date: true,
-            code: true
+            code: true,
+            username: true
         },
         {},
         {
