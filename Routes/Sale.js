@@ -28,9 +28,9 @@ module.exports = require( './ModelRouter' )( SaleModel, '[user, code.[type, zone
         req.query, 
         { 
             session: true,
-            to_sale_date: true,
-            code: true,
-            username: true
+            to_sale_date: true,            
+            username: true,
+            code: true
         },
         {},
         {
@@ -41,6 +41,20 @@ module.exports = require( './ModelRouter' )( SaleModel, '[user, code.[type, zone
             }
         } 
     );
+
+    if(req.query.code)
+    {
+        const codesQuery = {code: req.query.code};
+        dbQuery.addAllReqParams(
+            Code.tableName,
+            codesQuery,
+            {},
+            {
+                code: true
+            },
+            {}
+        );
+    }
 
     if( 'supervisor' === user.role.role ) {
         dbQuery.join(
