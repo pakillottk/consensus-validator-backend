@@ -16,7 +16,7 @@
     "debug": "~2.6.9",
     "deep-extend": "^0.5.1",
     "express": "^4.17.1",
-    "express-fileupload": "^0.4.0",
+    "express-fileupload": "^1.1.10",
     "express-oauth-server": "^2.0.0",
     "helmet": "^3.21.0",
     "jade": "~1.11.0",
