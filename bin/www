@@ -3,12 +3,13 @@
 /**
  * Module dependencies.
  */
-var fs = require('fs');
-var app = require('../app');
-var debug = require('debug')('backend:server');
-var http = require('http');
-var https = require('https');
-var env = require('../env');
+const path = require('path');
+const fs = require('fs');
+const app = require('../app');
+const debug = require('debug')('backend:server');
+const http = require('http');
+const https = require('https');
+const env = require('../env');
 
 /**
  * Get port from environment and store in Express.
@@ -28,6 +29,23 @@ if( env.protocol === "http" ) {
     cert: fs.readFileSync( env.serverOptions.ssl.certFile ),
     ca: fs.readFileSync( env.serverOptions.ssl.chainFile )
   }, app);
+
+  const certFolder = path.dirname(env.serverOptions.ssl.certFile);
+  if( certFolder )
+  {
+    let timeout;
+    fs.watch(certFolder, (event, filename) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+          httpsServer.setSecureContext({
+            key: fs.readFileSync( env.serverOptions.ssl.keyFile ),
+            cert: fs.readFileSync( env.serverOptions.ssl.certFile ),
+            ca: fs.readFileSync( env.serverOptions.ssl.chainFile )
+          });
+          console.log('Secure context updated.');
+      }, 5000);
+    });
+  }
 }
 var io = require('socket.io')( server, {
   pingInterval: 5000,
